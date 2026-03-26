@@ -1,4 +1,5 @@
 // lib/fileUpload.ts
+import { buildApiUrl } from "@/lib/backendUrls";
 
 export interface FileUploadResponse {
   success: boolean;
@@ -19,7 +20,7 @@ export async function uploadFile(file: File): Promise<FileUploadResponse> {
     formData.append('type', 'logo'); // or 'profile_image', etc.
 
     // Upload file to your backend
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}upload/file`, {
+    const response = await fetch(buildApiUrl("upload/file"), {
       method: 'POST',
       headers: {
         // Don't set Content-Type, let browser set it with boundary for FormData

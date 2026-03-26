@@ -6,10 +6,27 @@ from .serializers import CampaignSerializer, HireGetSerializer
 from .utils import generate_response
 from .permissions import IsJWTAuthenticated
 from rest_framework.pagination import PageNumberPagination
-import httpx
-import os
+import logging
 
-from django.core.mail import send_mail
+logger = logging.getLogger(__name__)
+
+
+def _dispatch(event: str, payload: dict):
+    try:
+        from celery_s.automations import dispatch_automation_event
+
+        dispatch_automation_event.delay(event, payload)
+    except Exception as exc:
+        logger.warning("[campaign] automation dispatch failed for %s: %s", event, exc)
+
+
+def _campaign_name(campaign_id: int | None) -> str:
+    if not campaign_id:
+        return "your campaign"
+    return (
+        Campaign.objects.filter(pk=campaign_id).values_list("campaign_name", flat=True).first()
+        or "your campaign"
+    )
 
 
 @api_view(['POST'])
@@ -202,71 +219,6 @@ def hire_influencer(request):
             hire_obj.attachments.add(new_file)
     
     serializer = HireGetSerializer(hire_obj)
-    res = httpx.post(
-        "http://user_service:8000/create_log/",
-        headers={"Host": "localhost", "services-shared-secret": os.environ['SERVICES_SHARED_SECRET']},
-        json={
-            "type_alias": "PROPOSAL_SENT",
-            "brand_id": user_id,
-            "influencer_id": hire_obj.hired_influencer_id
-        }
-    )
-    print(res.json())
-    res.raise_for_status()
-    res = httpx.get(
-        f"http://user_service:8000/get_user_info_by_id/{influencer_id}/",
-        headers={"Host": "localhost", "services-shared-secret": os.environ['SERVICES_SHARED_SECRET']}
-    )
-    res.raise_for_status()
-    influencer_email = res.json()['data']['user']['email']
-    influencer_name = res.json()['data']['influencer_profile']['display_name']
-    res = httpx.get(
-        f"http://user_service:8000/get_user_info_by_id/{user_id}/",
-        headers={"Host": "localhost", "services-shared-secret": os.environ['SERVICES_SHARED_SECRET']}
-    )
-    res.raise_for_status()
-    brand_name = res.json()['data']['brand_profile']['business_name']
-    brand_email=res.json()['data']['user']['email']
-    send_mail(
-        subject="New Hiring Proposal Received",
-        message=f"""
-Dear {influencer_name},
-From The Social Market
-You have received a hire proposal from {brand_name}. Click here to view and respond.
-Best Regards,
-The Social Market Team
-        """,
-        html_message=f"""
-Dear {influencer_name},<br>
-From The Social Market<br>
-You have received a hire proposal from {brand_name}. Click <a href="https://thesocialmarket.ai">here</a> to view and respond.<br>
-Best Regards,<br>
-The Social Market Team
-        """,
-
-        from_email="noreply@thesocialmarket.com",
-        recipient_list=[influencer_email]
-    )
-    send_mail(
-        subject="New Hiring Proposal Sent",
-        message=f"""
-Dear {brand_name},
-From The Social Market
-Your hire proposal to {influencer_name} has been sent successfully. Track it here.
-Best Regards,
-The Social Market Team
-        """,
-        html_message=f"""
-Dear {brand_name},<br>
-From The Social Market<br>
-Your hire proposal to {influencer_name} has been sent successfully. Track it here.<br>
-Best Regards,<br>
-The Social Market Team
-        """,
-
-        from_email="noreply@thesocialmarket.com",
-        recipient_list=[brand_email]
-    )
     response = generate_response("success", 201, serializer.data)
     return Response(response, status=201)
 
@@ -319,20 +271,19 @@ def accept_offer(request, offer_id):
         if h.hired_influencer_id == user_id:
             h.is_accepted_by_influencer = True
             h.save()
+            _dispatch(
+                "PROPOSAL_ACCEPTED",
+                {
+                    "hire_id": h.id,
+                    "brand_id": h.owner_id,
+                    "influencer_id": user_id,
+                    "campaign_id": h.campaign_id,
+                    "campaign_name": _campaign_name(h.campaign_id),
+                },
+            )
             response = generate_response(
                 "success", 200, {"message": "Successfully Acccepted the offer."}
             )
-            res = httpx.post(
-                "http://user_service:8000/create_log/",
-                headers={"Host": "localhost", "services-shared-secret": os.environ['SERVICES_SHARED_SECRET']},
-                json={
-                    "type_alias": "PROPOSAL_ACCEPTED",
-                    "brand_id": h.owner_id,
-                    "influencer_id": user_id
-                }
-            )
-            print(res.json())
-            res.raise_for_status()
             return Response(
                 response, status=200
             )
@@ -362,20 +313,19 @@ def reject_offer(request, offer_id):
         if h.hired_influencer_id == user_id:
             h.is_rejected_by_influencer = True
             h.save()
+            _dispatch(
+                "PROPOSAL_REJECTED",
+                {
+                    "hire_id": h.id,
+                    "brand_id": h.owner_id,
+                    "influencer_id": user_id,
+                    "campaign_id": h.campaign_id,
+                    "campaign_name": _campaign_name(h.campaign_id),
+                },
+            )
             response = generate_response(
                 "success", 200, {"message": "Successfully Rejected the offer."}
             )
-            res = httpx.post(
-                "http://user_service:8000/create_log/",
-                headers={"Host": "localhost", "services-shared-secret": os.environ['SERVICES_SHARED_SECRET']},
-                json={
-                    "type_alias": "PROPOSAL_REJECTED",
-                    "brand_id": h.owner_id,
-                    "influencer_id": user_id
-                }
-            )
-            print(res.json())
-            res.raise_for_status()
             return Response(
                 response, status=200
             )
@@ -405,6 +355,16 @@ def complete_offer(request, offer_id):
         if h.owner_id == user_id:
             h.is_completed_marked_by_brand = True
             h.save()
+            _dispatch(
+                "CAMPAIGN_COMPLETED",
+                {
+                    "hire_id": h.id,
+                    "brand_id": h.owner_id,
+                    "influencer_id": h.hired_influencer_id,
+                    "campaign_id": h.campaign_id,
+                    "campaign_name": _campaign_name(h.campaign_id),
+                },
+            )
             response = generate_response(
                 "success", 200, {"message": "Successfully Completed the offer."}
             )
@@ -593,4 +553,102 @@ def delete_campaign(request, campaign_id):
     campaign = get_object_or_404(Campaign, id=campaign_id)
     campaign.delete()
     return redirect('https://backend.thesocialmarket.ai/api/campaign_service/campaigns')
-    
+
+
+@api_view(['GET'])
+def get_pending_hires(request):
+    """
+    Internal endpoint for Celery reminders.
+    Returns proposals that have been sitting without an influencer response.
+    """
+    from django.utils import timezone
+    from datetime import timedelta
+
+    cutoff = timezone.now() - timedelta(hours=24)
+    pending = Hire.objects.filter(
+        is_accepted_by_influencer=False,
+        is_rejected_by_influencer=False,
+        timestamp__lt=cutoff,
+    ).order_by('timestamp')
+
+    serializer = HireGetSerializer(pending, many=True)
+    return Response(generate_response("success", 200, serializer.data), 200)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsJWTAuthenticated])
+def give_brand_rating(request, offer_id):
+    user_id = int(request.token_payload.get('user_id'))
+    rating = request.data.get('rating')
+
+    if rating is None:
+        return Response(generate_response("failure", 400, {}, "Rating is required."), 400)
+
+    try:
+        rating = float(rating)
+        if not (1 <= rating <= 5):
+            return Response(generate_response("failure", 400, {}, "Rating must be between 1 and 5."), 400)
+    except (TypeError, ValueError):
+        return Response(generate_response("failure", 400, {}, "Invalid rating value."), 400)
+
+    try:
+        hire = Hire.objects.get(pk=offer_id)
+    except Hire.DoesNotExist:
+        return Response(generate_response("failure", 404, {}, "Offer not found."), 404)
+
+    if hire.hired_influencer_id != user_id:
+        return Response(generate_response("failure", 403, {}, "You are not the influencer on this offer."), 403)
+
+    if not hire.is_completed_marked_by_brand:
+        return Response(generate_response("failure", 400, {}, "Cannot rate until the campaign is marked complete."), 400)
+
+    hire.brand_rating = rating
+    hire.save(update_fields=['brand_rating'])
+    return Response(generate_response("success", 200, {"message": "Rating submitted."}), 200)
+
+
+@api_view(['GET'])
+@permission_classes([IsJWTAuthenticated])
+def get_campaign_performance(request, campaign_id):
+    from django.db.models import Avg, Count, Q, Sum
+
+    user_id = int(request.token_payload.get('user_id'))
+
+    try:
+        campaign = Campaign.objects.get(pk=campaign_id)
+    except Campaign.DoesNotExist:
+        return Response(generate_response("failure", 404, {}, "Campaign not found."), 404)
+
+    if campaign.campaign_owner != user_id:
+        return Response(generate_response("failure", 403, {}, "Not your campaign."), 403)
+
+    hires = Hire.objects.filter(campaign_id=campaign_id)
+    stats = hires.aggregate(
+        total_proposals=Count('id'),
+        accepted=Count('id', filter=Q(is_accepted_by_influencer=True)),
+        rejected=Count('id', filter=Q(is_rejected_by_influencer=True)),
+        completed=Count('id', filter=Q(is_completed_marked_by_brand=True)),
+        avg_rating=Avg('rating'),
+        total_spend=Sum('budget'),
+    )
+
+    total = stats['total_proposals'] or 0
+    accepted = stats['accepted'] or 0
+    rejected = stats['rejected'] or 0
+    completed = stats['completed'] or 0
+
+    data = {
+        "campaign_id": campaign_id,
+        "campaign_name": campaign.campaign_name,
+        "total_proposals": total,
+        "accepted": accepted,
+        "rejected": rejected,
+        "pending": total - accepted - rejected,
+        "completed": completed,
+        "acceptance_rate": round(accepted / total * 100) if total > 0 else 0,
+        "completion_rate": round(completed / accepted * 100) if accepted > 0 else 0,
+        "average_rating": round(stats['avg_rating'] or 0, 1),
+        "total_spend": float(stats['total_spend'] or 0),
+    }
+
+    return Response(generate_response("success", 200, data), 200)

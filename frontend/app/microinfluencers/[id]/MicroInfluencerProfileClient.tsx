@@ -22,7 +22,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
-import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
 import { MicroInfluencer } from "@/types/micro-influencer";
  interface Campaign {
@@ -141,9 +140,6 @@ export default function BrandProfilePage() {
   const { id } = useParams<{ id: string }>();
   const [influencer, SetInfluencer] = useState<MicroInfluencer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [saveLoading, setSaveLoading] = useState(false);
   const router = useRouter();
 const [collaboration, setCollaboration] = useState<Collaboration | null>(null);
 
@@ -198,10 +194,7 @@ const [collaboration, setCollaboration] = useState<Collaboration | null>(null);
         const normalised: MicroInfluencer = {
           id: String(profile.id ?? id),
           userId: res?.data?.user?.id ? String(res?.data?.user?.id) : undefined,
-name:
-  profile?.display_name?.trim() ||
-  res?.data?.user?.first_name?.trim() ||
-  "Unknown",
+          name: str(profile.display_name, res?.data?.user?.first_name),
           description: str(profile.short_bio, ""),
           logo:
             profile.profile_picture && profile.profile_picture !== "null"
@@ -225,7 +218,7 @@ name:
           businessType: str(profile.niche || profile.category, "—"), // fallback to niche or category
 
           contactPerson: {
-            name: profile?.display_name ?? "Unknown",
+            name: str(profile.display_name),
             title: str(profile.role || profile.title, "Influencer"),
           },
 
@@ -355,54 +348,6 @@ useEffect(()=>{
     fetchData();
           
   },[id]);
-
-  useEffect(() => {
-    const fetchSavedInfluencers = async () => {
-      if (!id) return;
-      try {
-        const res = await apiClient("user_service/get_saved_influencers/", {
-          method: "GET",
-          auth: true,
-        });
-        const saved: Array<{ id?: string | number; user?: { id?: string | number } }> =
-          Array.isArray(res?.data) ? res.data : [];
-        setIsSaved(
-          saved.some((profile) => String(profile.user?.id ?? profile.id) === String(id))
-        );
-      } catch {
-        setIsSaved(false);
-      }
-    };
-
-    fetchSavedInfluencers();
-  }, [id]);
-
-  const handleSaveToggle = async () => {
-    if (!id || saveLoading) return;
-    setSaveLoading(true);
-
-    try {
-      if (isSaved) {
-        await apiClient(`user_service/unsave_influencer/${id}/`, {
-          method: "DELETE",
-          auth: true,
-        });
-        setIsSaved(false);
-        toast("Removed from saved influencers");
-      } else {
-        await apiClient(`user_service/save_influencer/${id}/`, {
-          method: "POST",
-          auth: true,
-        });
-        setIsSaved(true);
-        toast("Influencer saved");
-      }
-    } catch {
-      toast("Unable to update saved influencers");
-    } finally {
-      setSaveLoading(false);
-    }
-  };
   // -------------------------------------------------
   // 3. Loading / Not-found UI
   // -------------------------------------------------
@@ -425,12 +370,11 @@ useEffect(()=>{
   // 4. Render the full profile
   // -------------------------------------------------
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen container mx-auto px-4 pt-8">
       <div className="">
-        {/* Header */}
         <div
       onClick={() => router.back()}
-      className="flex items-center gap-4 mb-6 cursor-pointer text-gray-400 hover:text-gray-600 mt-4"
+      className="flex items-center gap-4 mb-6 cursor-pointer text-gray-400 hover:text-gray-600"
     >
       <ArrowLeft className="w-5 h-5" />
       <span className="text-gray-600">Back</span>
@@ -562,7 +506,7 @@ useEffect(()=>{
             </div>
 
             <div className="flex gap-3">
-              <button
+              {/* <button
                 className="bg-yellow-500 hover:bg-[var(--secondaryhover)] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
                 onClick={() =>
                   router.push(
@@ -572,7 +516,7 @@ useEffect(()=>{
               >
                 <MessageCircle className="w-4 h-4" />
                 Message
-              </button>
+              </button> */}
               {/* <button className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                 <Bookmark className="w-4 h-4" />
                 Save
@@ -993,7 +937,7 @@ useEffect(()=>{
               {influencer.paymentPreferences &&
                 influencer.paymentPreferences.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
                       Payment Options
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -1016,7 +960,7 @@ useEffect(()=>{
 
               {influencer.response_time ? (
                 <div className="flex items-center">
-                  <span className="text-sm font-semibold text-primary">
+                  <span className="text-2xl font-bold text-gray-900">
                     {influencer.response_time}
                   </span>
                   {/* <span className="ml-2 text-sm text-gray-500">hours</span> */}

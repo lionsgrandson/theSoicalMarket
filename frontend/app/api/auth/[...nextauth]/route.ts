@@ -7,6 +7,7 @@ import GoogleProvider from "next-auth/providers/google";
 import AppleProvider from "next-auth/providers/apple";
 import { JWT } from "next-auth/jwt";
 import { cookies } from "next/headers";
+import { buildApiUrl } from "@/lib/backendUrls";
 
 type CredentialsUser = User & {
   backendAccessToken?: string;
@@ -49,7 +50,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password required");
         }
         try {
-          const backendUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}user_service/login/`;
+          const backendUrl = buildApiUrl("user_service/login/");
           const response = await fetch(backendUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -145,7 +146,7 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
-          const backendUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}user_service/social_signup_signin/`;
+          const backendUrl = buildApiUrl("user_service/social_signup_signin/");
           const response = await fetch(backendUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },

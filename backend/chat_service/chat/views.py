@@ -7,8 +7,18 @@ from .utils import generate_response, fetch_user_info
 from rest_framework import status
 from django.db.models import Q
 from .models import ChatMessage, Notification
+import os
 
 from .serializers import NotificationSerializer
+
+
+def _is_internal_request_authorized(request) -> bool:
+    shared_secret = request.headers.get("services-shared-secret")
+    if shared_secret and shared_secret == os.environ.get("SERVICES_SHARED_SECRET"):
+        return True
+
+    notification_secret = request.headers.get("noti_secret_key")
+    return bool(notification_secret and notification_secret == os.environ.get("NOTI_SECRET_KEY"))
 
 @api_view(['POST'])
 @permission_classes([IsJWTAuthenticated])
@@ -132,8 +142,7 @@ def get_room_history(request, room_id):
 from .utils import send_notification_to_user
 @api_view(['POST'])
 def send_mock_notification(request, user_id):
-    noti_secret_key = request.headers.get('noti_secret_key')
-    if not noti_secret_key or noti_secret_key != os.environ['NOTI_SECRET_KEY']:
+    if not _is_internal_request_authorized(request):
         return Response({
             "success": False,
             "message": "Unauthorized"
@@ -212,3 +221,25 @@ def get_unread_message(request):
         "rooms": unread_rooms,
     })
     return Response(response, status=200)
+
+
+@api_view(['GET'])
+def get_unseen_notification_counts(request):
+    """
+    Internal endpoint for unread-notification reminder emails.
+    Returns unseen notification counts older than 24 hours grouped by user.
+    """
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Count
+
+    if any(field.name == 'timestamp' for field in Notification._meta.fields):
+        cutoff = timezone.now() - timedelta(hours=24)
+        queryset = Notification.objects.filter(seen=False, timestamp__lt=cutoff)
+    else:
+        queryset = Notification.objects.filter(seen=False)
+
+    counts = queryset.values('user_id').annotate(count=Count('id')).order_by('-count')
+
+    data = [{'user_id': row['user_id'], 'count': row['count']} for row in counts]
+    return Response(generate_response("success", 200, data), 200)

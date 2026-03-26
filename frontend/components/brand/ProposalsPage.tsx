@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
+import { buildApiUrl } from "@/lib/backendUrls";
 import {
   Select,
   SelectContent,
@@ -245,7 +246,7 @@ export default function ProposalsPage() {
       console.log("Sending proposal with FormData");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}campaign_service/hire_influencer/`,
+        buildApiUrl("campaign_service/hire_influencer/"),
         {
           method: "POST",
           headers: {

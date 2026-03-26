@@ -19,7 +19,12 @@ __pycache__/
 .DS_Store
 *.log
 *.pem
+*.key
 *.tsbuildinfo
+*.sqlite3
+db.sqlite3
+temp/
+*/temp/*.pdf
 
 .vercel/
 .pnpm-debug.log*

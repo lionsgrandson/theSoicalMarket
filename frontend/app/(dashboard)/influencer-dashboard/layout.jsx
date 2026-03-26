@@ -6,6 +6,7 @@ import { HiMenu, HiX } from "react-icons/hi";
 import { influencerLinks } from "../../../config/sidebarLinks";
 import { usePathname } from "next/navigation";
 import DashboardTopHeader from "../../../components/dashboard/DashboardTopHeader";
+import ErrorBoundary from "../../../components/ErrorBoundary";
 import { PanelRightClose } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
 import { useChatStore } from "@/stores/chatStore";
@@ -99,7 +100,7 @@ export default function BrandDashboardLayout({ children }) {
       {/* Main content */}
       <main className="flex-1 ml-0 md:ml-64 p-6 overflow-y-auto min-h-screen">
         {path != "/influencer-dashboard/messages" && <DashboardTopHeader />}
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
       </main>
     </div>
   );

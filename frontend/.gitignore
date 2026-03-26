@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.sqlite3
+temp/
+*/temp/*.pdf
 
 # debug
 npm-debug.log*

@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  turbopack: {
+    root: process.cwd(),
+  },
   compiler:{
     removeConsole:true
     
@@ -59,6 +62,14 @@ const nextConfig: NextConfig = {
         hostname: "i.ibb.co",
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/backend-api/:path*",
+        destination: "https://backend.thesocialmarket.ai/api/:path*",
+      },
+    ];
   },
   
 };

@@ -126,6 +126,22 @@ const getSafeImageSrc = (src?: string) => {
   return "/images/person.jpg";
 };
 
+const buildChatSocketUrl = (roomId: string, token: string) => {
+  const rawBase =
+    process.env.NEXT_PUBLIC_WS_URL ?? process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+
+  if (!rawBase) {
+    throw new Error("Missing NEXT_PUBLIC_WS_URL");
+  }
+
+  const trimmedBase = rawBase.replace(/\/+$/, "");
+  const handshakeBase = trimmedBase.endsWith("/chat_handshake")
+    ? trimmedBase
+    : `${trimmedBase}/chat_handshake`;
+
+  return `${handshakeBase}/ws/chat/${roomId}/?token=${encodeURIComponent(token)}`;
+};
+
 
 function InfluencerMessagesClientContent() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -455,10 +471,7 @@ function InfluencerMessagesClientContent() {
           wsRef.current = null;
         }
 
-        // Build WebSocket URL using existing room
-        const wsUrl = `wss://exhaust-minute-picked-reservations.trycloudflare.com/chat_handshake/ws/chat/${
-          selectedRoom.room_id
-        }/?token=${encodeURIComponent(token)}`;
+        const wsUrl = buildChatSocketUrl(selectedRoom.room_id, token);
 
         console.log("🔗 Connecting to WebSocket:", wsUrl);
 

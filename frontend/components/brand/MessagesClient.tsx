@@ -136,6 +136,22 @@ const getSafeImageSrc = (src?: string) => {
   return null;
 };
 
+const buildChatSocketUrl = (roomId: string, token: string) => {
+  const rawBase =
+    process.env.NEXT_PUBLIC_WS_URL ?? process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+
+  if (!rawBase) {
+    throw new Error("Missing NEXT_PUBLIC_WS_URL");
+  }
+
+  const trimmedBase = rawBase.replace(/\/+$/, "");
+  const handshakeBase = trimmedBase.endsWith("/chat_handshake")
+    ? trimmedBase
+    : `${trimmedBase}/chat_handshake`;
+
+  return `${handshakeBase}/ws/chat/${roomId}/?token=${encodeURIComponent(token)}`;
+};
+
 function MessagesClientContent() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -463,10 +479,7 @@ console.log("testing for firstUnreadIndex",messages);
           return;
         }
 
-        // Build WebSocket URL using existing room
-        const wsUrl = `${process.env.NEXT_PUBLIC_WEBSOCKET_URL}${
-          selectedRoom.room_id
-        }/?token=${encodeURIComponent(token)}`;
+        const wsUrl = buildChatSocketUrl(selectedRoom.room_id, token);
 
         if (wsRef.current) {
           wsRef.current.close();

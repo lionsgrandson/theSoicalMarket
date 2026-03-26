@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/apiClient.ts
+import { buildApiUrl } from "@/lib/backendUrls";
+
 export interface ApiOptions extends RequestInit {
   auth?: boolean;
   raw?: boolean;
@@ -9,17 +11,10 @@ export async function apiClient<T = any>(
   endpoint: string,
   { auth = false, headers, raw = false, ...options }: ApiOptions = {}
 ): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL!;
-
-  // FIX: both branches previously produced the same string — missing "/" separator
-  const url = baseUrl.endsWith("/")
-    ? `${baseUrl}${endpoint}`
-    : `${baseUrl}/${endpoint}`;
+  const url = buildApiUrl(endpoint);
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-
-  // FIX: removed console.log that was printing token values on every single API call
 
   const res = await fetch(url, {
     headers: {

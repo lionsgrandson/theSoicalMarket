@@ -5,6 +5,7 @@ import { CheckCircle, Search, MessageCircle, Gift, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/apiClient";
+import { buildApiUrl } from "@/lib/backendUrls";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useInfluencerOnboarding } from "@/contexts/InfluencerOnboardingContext";
 import { toast } from "react-toastify";
@@ -224,7 +225,7 @@ useEffect(() => {
       const apiPayload = transformInfluencerDataForAPI(onboardingData);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}user_service/update_user_profile/`,
+        buildApiUrl("user_service/update_user_profile/"),
         {
           method: "PATCH",
           headers: {
