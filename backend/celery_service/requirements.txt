@@ -1,0 +1,12 @@
+httpx
+
+django
+djangorestframework
+python-decouple
+django-cors-headers
+requests
+
+gunicorn
+
+celery
+redis

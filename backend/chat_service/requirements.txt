@@ -1,0 +1,11 @@
+django
+djangorestframework
+djangorestframework-simplejwt
+python-decouple
+psycopg2-binary
+django-cors-headers
+requests
+channels 
+channels-redis 
+daphne
+httpx

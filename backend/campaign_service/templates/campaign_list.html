@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Campaigns</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body class="bg-light">
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">Campaigns</h2>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>Campaign ID</th>
+                    
+                    <th>Owner ID</th>
+                    <th>Brand Name</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Budget</th>
+                    <th>Timeline</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+{% for campaign in campaigns %}
+<tr>
+    <td>{{ campaign.id }}</td>
+    <td>{{ campaign.campaign_owner }}</td>
+    <td>{{campaign.brand_name}}</td>
+    <td>{{ campaign.campaign_name }}</td>
+    <td>
+        <span class="badge bg-info">
+            {{ campaign.campaign_status }}
+        </span>
+    </td>
+    <td>{{ campaign.budget_range }}</td>
+    <td>{{ campaign.campaign_timeline }}</td>
+    <td>
+        <button class="btn btn-sm btn-outline-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#campaignModal{{ campaign.id }}">
+            View
+        </button>
+
+        <a href="https://backend.thesocialmarket.ai/api/campaign_service/campaigns/delete/{{campaign.id}}"
+           class="btn btn-sm btn-danger"
+           onclick="return confirm('Delete this campaign?')">
+            Delete
+        </a>
+    </td>
+</tr>
+
+<!-- Modal -->
+<div class="modal fade" id="campaignModal{{ campaign.id }}" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Campaign Details — {{ campaign.campaign_name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <strong>Campaign ID</strong><br>
+                        {{ campaign.id }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Owner ID</strong><br>
+                        {{ campaign.campaign_owner }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Status</strong><br>
+                        {{ campaign.campaign_status }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Objective</strong><br>
+                        {{ campaign.campaign_objective }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Description</strong><br>
+                        {{ campaign.campaign_description }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Budget Type</strong><br>
+                        {{ campaign.budget_type }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Budget Range</strong><br>
+                        {{ campaign.budget_range }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Payment Preference</strong><br>
+                        {{ campaign.payment_preference }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <strong>Deliverables</strong><br>
+                        {{ campaign.content_deliverables }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Approval Required</strong><br>
+                        {{ campaign.content_approval_required|yesno:"Yes,No" }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Auto Match Influencers</strong><br>
+                        {{ campaign.auto_match_micro_influencers|yesno:"Yes,No" }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Timeline</strong><br>
+                        {{ campaign.campaign_timeline }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Target Audience</strong><br>
+                        {{ campaign.target_audience }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Keywords / Hashtags</strong><br>
+                        {{ campaign.keywords_and_hashtags }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Poster</strong><br>
+                        {{ campaign.campaign_poster }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Created At</strong><br>
+                        {{ campaign.timestamp|date:"Y-m-d H:i" }}
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="https://backend.thesocialmarket.ai/api/campaign_service/campaigns/delete/{{campaign.id}}"
+                   class="btn btn-danger"
+                   onclick="return confirm('Delete this campaign?')">
+                    Delete Campaign
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endfor %}
+</tbody>
+
+        </table>
+    </div>
+
+    {% if not campaigns %}
+        <div class="alert alert-warning mt-3">
+            No campaigns found.
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>

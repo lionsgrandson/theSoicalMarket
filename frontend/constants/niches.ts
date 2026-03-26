@@ -1,0 +1,18 @@
+export const industriesNiches = [
+  "Beauty & Skincare Brands – makeup, skincare, haircare",
+  "Fashion & Apparel – clothing lines, modest fashion brands, boutique shops",
+  "Jewelry & Accessories – watches, handbags, eyewear",
+  "Health & Wellness – supplements, fitness programs, healthy living",
+  "Food & Beverage – restaurants, cafes, packaged foods, specialty drinks",
+  "Hospitality & Travel – hotels, resorts, Airbnb hosts, travel agencies",
+  "Events & Experiences – retreats, workshops, conferences",
+  "E-commerce Stores – online boutiques, curated shops, niche product sellers",
+  "Local Service Providers – gyms, salons, spas, personal trainers",
+  "Tech & Gadgets – phone accessories, smart devices, apps",
+  "Education & Coaching – online courses, coaches, masterminds",
+  "Parenting & Family Brands – baby products, toys, household goods",
+  "Home & Lifestyle – decor, furniture, kitchenware, cleaning products",
+  "Financial & Professional Services – investment apps, insurance, credit repair",
+  "Nonprofits & Causes – charities, community organizations, social impact campaigns",
+  "Other",
+];

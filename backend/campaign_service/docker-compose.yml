@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  campaign_service_lb:
+    image: nginx:1.25-alpine
+    container_name: campaign_service_lb
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - microservices_shared_network
+    depends_on:
+      - campaign_service
+
+  campaign_service:
+    build: .
+    command: gunicorn src.wsgi:application --bind 0.0.0.0:8000 --workers 4
+    volumes:
+      - .:/app
+    networks:
+      - microservices_shared_network
+    depends_on:
+      - campaign_postgres_db
+    env_file:
+      - .env
+
+  campaign_postgres_db:
+    image: postgres:16-alpine
+    container_name: postgres_db_container_campaign_service
+    volumes:
+      - campaign_service_postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=campaign_service_db
+      - POSTGRES_USER=campaign_service_user
+      - POSTGRES_PASSWORD=a_strong_password
+    networks:
+      - microservices_shared_network
+
+networks:
+  microservices_shared_network:
+    external: true
+
+volumes:
+  campaign_service_postgres_data: {}

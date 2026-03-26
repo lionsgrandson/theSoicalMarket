@@ -1,0 +1,14 @@
+{
+  "rate_limit": {
+    "requests": 60,
+    "timeout_seconds": 60
+  },
+  "SERVICE_MAP": {
+    "user_service": "http://user_service:8000",
+    "caching_service": "redis://caching_service:6379/1",
+    "campaign_service": "http://campaign_service:8000",
+    "subscription_service": "http://subscription_service:8000",
+    "chat_service": "http://chat_service:8000",
+    "celery_service": "redis://celery_service:8000"
+  }
+}

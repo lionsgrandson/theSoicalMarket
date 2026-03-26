@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  celery_service_lb:
+    image: nginx:1.25-alpine
+    container_name: celery_service_lb
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8005:80"
+    depends_on:
+      - celery_service
+    networks:
+      - microservices_shared_network
+
+  celery_service:
+    build: .
+    container_name: celery_service
+    command: gunicorn src.wsgi:application --bind 0.0.0.0:8000 --reload
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    networks:
+      - microservices_shared_network
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    command: celery -A src worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - celery_service
+      - redis
+    networks:
+      - microservices_shared_network
+
+  celery_beat:
+    build: .
+    container_name: celery_beat
+    # The beat scheduler triggers the tasks based on settings.py
+    command: celery -A src beat -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis # <--- Beat needs Redis to send triggers
+    networks:
+      - microservices_shared_network
+
+  # --- YOU NEED THIS FOR IT TO WORK ---
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    networks:
+      - microservices_shared_network
+
+networks:
+  microservices_shared_network:
+    external: true
