@@ -12,28 +12,25 @@ export async function middleware(req: NextRequest) {
   const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
   const isAuthPage = AUTH_PAGES.some((p) => pathname.startsWith(p));
 
-  let token = null;
+  let hasNextAuthSession = false;
   try {
-    token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    hasNextAuthSession = Boolean(
+      await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+    );
   } catch {
-    // FIX: original catch block used NextResponse.next() — let unauthenticated users through
-    // Now correctly redirects to login when token check fails
-    if (isProtected) {
-      const loginUrl = req.nextUrl.clone();
-      loginUrl.pathname = "/auth/login";
-      loginUrl.searchParams.set("returnTo", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-    return NextResponse.next();
+    hasNextAuthSession = false;
   }
 
+  const hasAccessTokenCookie = Boolean(req.cookies.get("access_token")?.value);
+  const isAuthenticated = hasNextAuthSession || hasAccessTokenCookie;
+
   // Logged-in user trying to reach an auth page — send to dashboard
-  if (token && isAuthPage) {
+  if (isAuthenticated && isAuthPage) {
     return NextResponse.redirect(new URL("/home_dashboard", req.url));
   }
 
   // No token trying to reach a protected page — send to login
-  if (!token && isProtected) {
+  if (!isAuthenticated && isProtected) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = "/auth/login";
     loginUrl.searchParams.set("returnTo", pathname);

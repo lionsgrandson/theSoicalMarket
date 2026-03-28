@@ -207,8 +207,7 @@ const CampaignStep = ({ onBack,onNext }: CampaignStepProps) => {
         setUploadingImage(true);
         setUploadError("");
         const res = await uploadToCloudinary(file);
-        // Only update state if upload was successful and has a URL
-        if (res?.url) {
+        if (res?.success && res.url) {
           setOnboardingData((prev) => ({
             ...prev,
             campaign_poster: res.url, 
@@ -216,7 +215,7 @@ const CampaignStep = ({ onBack,onNext }: CampaignStepProps) => {
             posterPreview: URL.createObjectURL(file),
           }));
         } else {
-          setUploadError("Upload failed - no URL returned");
+          setUploadError(res.error || "Upload failed - no URL returned");
         }
       } catch (err) {
         console.error("Upload failed", err);
@@ -248,7 +247,7 @@ const CampaignStep = ({ onBack,onNext }: CampaignStepProps) => {
           setUploadingImage(true);
           setUploadError("");
           const res = await uploadToCloudinary(file);
-          if (res?.url) {
+          if (res?.success && res.url) {
             setOnboardingData((prev) => ({
               ...prev,
               campaign_poster: res.url,
@@ -256,7 +255,7 @@ const CampaignStep = ({ onBack,onNext }: CampaignStepProps) => {
               posterPreview: URL.createObjectURL(file),
             }));
           } else {
-            setUploadError("Upload failed - no URL returned");
+            setUploadError(res.error || "Upload failed - no URL returned");
           }
         } catch (err) {
           console.error("Upload failed", err);

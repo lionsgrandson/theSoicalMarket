@@ -256,8 +256,7 @@ export default function CreateCampaignModal({
 
     try {
       const res = await uploadToCloudinary(file);
-      // Assuming uploadToCloudinary returns { url: string }
-      if (res?.url) {
+      if (res?.success && res.url) {
         setFormData((prev) => ({
           ...prev,
           campaign_poster: res.url ?? null,
@@ -266,7 +265,7 @@ export default function CreateCampaignModal({
         }));
         // toast.success("Image uploaded successfully");
       } else {
-        setUploadError("Upload failed - no URL returned");
+        setUploadError(res.error || "Upload failed - no URL returned");
       }
     } catch (err) {
       console.error("Upload failed", err);
@@ -302,7 +301,7 @@ export default function CreateCampaignModal({
 
       try {
         const res = await uploadToCloudinary(file);
-        if (res?.url) {
+        if (res?.success && res.url) {
           setFormData((prev) => ({
             ...prev,
             campaign_poster: res.url ?? null,
@@ -311,7 +310,7 @@ export default function CreateCampaignModal({
           }));
           toast.success("Image uploaded successfully");
         } else {
-          setUploadError("Upload failed - no URL returned");
+          setUploadError(res.error || "Upload failed - no URL returned");
         }
       } catch (err) {
         console.error("Upload failed", err);

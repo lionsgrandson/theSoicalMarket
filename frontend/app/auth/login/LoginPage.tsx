@@ -6,8 +6,8 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuthStore } from '@/stores/useAuthStore'
 import { signIn } from 'next-auth/react'
+import { login, setAuthFromResponse } from '@/lib/auth'
 
 function LoginPageContent() {
   const router = useRouter()
@@ -39,16 +39,12 @@ function LoginPageContent() {
     setLoading(true)
 
     try {
-      const result = await signIn('credentials', {
+      const response = await login({
         email: formData.email,
         password: formData.password,
-        redirect: false,
       })
 
-      if (result?.error) {
-        setErrors({ general: result.error })
-        throw new Error(result.error)
-      }
+      setAuthFromResponse(response)
 
       if (returnTo) {
         router.push(returnTo)
