@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
-import { login, setAuthFromResponse } from '@/lib/auth'
 
 function LoginPageContent() {
   const router = useRouter()
@@ -39,18 +38,25 @@ function LoginPageContent() {
     setLoading(true)
 
     try {
-      const response = await login({
+      const callbackUrl = returnTo || '/home_dashboard'
+      const result = await signIn('credentials', {
+        redirect: false,
         email: formData.email,
         password: formData.password,
+        callbackUrl,
       })
 
-      setAuthFromResponse(response)
-
-      if (returnTo) {
-        router.push(returnTo)
-      } else {
-        router.push('/home_dashboard')
+      if (result?.error) {
+        setErrors({
+          general:
+            result.error === 'CredentialsSignin'
+              ? 'Invalid email or password'
+              : result.error,
+        })
+        return
       }
+
+      router.push(result?.url || callbackUrl)
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Login failed'
       setErrors({ general: message })
@@ -60,12 +66,12 @@ function LoginPageContent() {
   }
 
   const handleGoogleLogin = async () => {
-    signIn('google', {
+    await signIn('google', {
       callbackUrl: `/home_dashboard`,
     })
   }
   const handleAppleLogin = async () => {
-    signIn('apple', {
+    await signIn('apple', {
       callbackUrl: `/home_dashboard`,
     })
   }

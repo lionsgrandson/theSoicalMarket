@@ -21,8 +21,7 @@ export async function middleware(req: NextRequest) {
     hasNextAuthSession = false;
   }
 
-  const hasAccessTokenCookie = Boolean(req.cookies.get("access_token")?.value);
-  const isAuthenticated = hasNextAuthSession || hasAccessTokenCookie;
+  const isAuthenticated = hasNextAuthSession;
 
   // Logged-in user trying to reach an auth page — send to dashboard
   if (isAuthenticated && isAuthPage) {

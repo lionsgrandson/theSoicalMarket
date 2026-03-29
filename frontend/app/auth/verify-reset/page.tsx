@@ -18,9 +18,6 @@ function VerifyResetContent() {
   const userEmail = searchParams.get("email");
   const[loading,setLoading]=useState(false);
 
-  console.log("Email:", userEmail);
-  console.log(userEmail);
-
   const handleInputChange = (index: number, value: string) => {
     if (value.length > 1) return;
 
@@ -71,7 +68,6 @@ function VerifyResetContent() {
 
     setError(res?.message || "Invalid verification code.");
   } catch (err) {
-    console.error("Verification error:", err);
     setError("Something went wrong. Please try again.");
   } finally {
     setLoading(false);
@@ -87,7 +83,6 @@ function VerifyResetContent() {
           body: JSON.stringify({ email: userEmail }),
         });
   
-        console.log("✅ Verification code resent to:", userEmail);
         setError(""); // Clear any previous errors
         toast("Verification code resent to your email!");
       } catch (error) {

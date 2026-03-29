@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { Check, Eye, EyeOff, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,6 @@ function ResetPasswordContent() {
   const otp = searchParams.get("code");
   const [loading, setLoading] = useState(false);
   const[apiError,setApiError]=useState("");
-
-  console.log("Email:", userEmail);
- // Refs for OTP inputs
 
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -76,8 +73,7 @@ function ResetPasswordContent() {
       setApiError("Unexpected server response.");
     }
 
-  } catch (error) {
-    console.error("Reset password error:", error);
+  } catch {
     setApiError("An unexpected error occurred. Please try again later.");
   } finally {
     setLoading(false);

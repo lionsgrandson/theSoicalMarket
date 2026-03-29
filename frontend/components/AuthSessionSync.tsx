@@ -40,14 +40,6 @@ export default function AuthSessionSync() {
     }
 
     if (status === "unauthenticated" && zustandToken) {
-      const hasPersistedToken =
-        typeof window !== "undefined" &&
-        Boolean(localStorage.getItem("access_token"));
-
-      if (hasPersistedToken) {
-        return;
-      }
-
       // Don't clear tokens on auth pages — signup and verification flows use them
       const isAuthRoute =
         typeof window !== "undefined" &&

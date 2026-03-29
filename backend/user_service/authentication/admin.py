@@ -77,7 +77,7 @@ admin_site = SocialMarketAdminSite(name="tsm_admin")
 
 # ── Model registrations ───────────────────────────────────────────────────────
 
-@admin_site.register(InfluencerInfo)
+@admin.register(InfluencerInfo, site=admin_site)
 class InfluencerInfoAdmin(admin.ModelAdmin):
     list_display = (
         "display_name", "instagram_handle", "tiktok_handle",
@@ -123,7 +123,7 @@ class InfluencerInfoAdmin(admin.ModelAdmin):
     )
 
 
-@admin_site.register(BrandInfo)
+@admin.register(BrandInfo, site=admin_site)
 class BrandInfoAdmin(admin.ModelAdmin):
     list_display = ("business_name", "website", "timezone", "choosen_plan", "is_featured")
     list_filter = ("timezone", "choosen_plan", "is_featured")
@@ -141,7 +141,7 @@ class BrandInfoAdmin(admin.ModelAdmin):
     )
 
 
-@admin_site.register(UserProfile)
+@admin.register(UserProfile, site=admin_site)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "user_id", "signed_up_as", "signup_method", "is_verified")
     list_filter = ("signed_up_as", "signup_method", "is_verified")
@@ -156,12 +156,12 @@ class UserProfileAdmin(admin.ModelAdmin):
     )
 
 
-@admin_site.register(Feedback)
+@admin.register(Feedback, site=admin_site)
 class FeedbackAdmin(admin.ModelAdmin):
     pass
 
 
-@admin_site.register(Log)
+@admin.register(Log, site=admin_site)
 class LogAdmin(admin.ModelAdmin):
     list_display = ("id", "type_alias", "short_text", "timestamp")
     list_filter = ("type_alias", "timestamp")
@@ -175,7 +175,7 @@ class LogAdmin(admin.ModelAdmin):
 
 
 # Register Django's built-in User model too
-@admin_site.register(User)
+@admin.register(User, site=admin_site)
 class UserAdmin(admin.ModelAdmin):
     list_display = ("username", "email", "first_name", "last_name", "is_staff", "date_joined")
     search_fields = ("username", "email", "first_name", "last_name")

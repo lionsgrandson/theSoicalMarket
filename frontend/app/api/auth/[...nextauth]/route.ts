@@ -15,6 +15,9 @@ type CredentialsUser = User & {
   role?: string;
 };
 
+const isSecureCookie = process.env.NODE_ENV === "production";
+const cookieSameSite = isSecureCookie ? "none" : "lax";
+
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
@@ -98,15 +101,20 @@ export const authOptions: NextAuthOptions = {
   cookies: {
     pkceCodeVerifier: {
       name: "next-auth.pkce.code_verifier",
-      options: { httpOnly: true, sameSite: "none", path: "/", secure: true },
+      options: {
+        httpOnly: true,
+        sameSite: cookieSameSite,
+        path: "/",
+        secure: isSecureCookie,
+      },
     },
     callbackUrl: {
       name: "next-auth.callback-url",
-      options: { sameSite: "none", path: "/", secure: true },
+      options: { sameSite: cookieSameSite, path: "/", secure: isSecureCookie },
     },
     csrfToken: {
       name: "next-auth.csrf-token",
-      options: { sameSite: "none", path: "/", secure: true },
+      options: { sameSite: cookieSameSite, path: "/", secure: isSecureCookie },
     },
   },
 

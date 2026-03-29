@@ -212,8 +212,6 @@ def login(request):
 
 
     response = generate_response("success", 200, {'refresh_token': str(refresh),  'access_token': str(access_token)})
-
-    print('I am hitted')
     return Response(response, status=200)
 
 
@@ -225,12 +223,6 @@ def get_user_info(request):
     profile, created = UserProfile.objects.get_or_create(user=user)
 
     data = UserProfileSerializer(profile).data
-
-    print(">>>>>>>>>>")
-    print(">>>>>>>>>>")
-    
-    print(data['is_brand_profile_complete'])
-    print(data['is_influencer_profile_complete'])
     response = generate_response("success", 200, data)
 
     return Response(
@@ -242,16 +234,13 @@ def get_user_info(request):
 @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 def get_user_info_by_id(request, user_id):
-    print("DEBUG .........SDFSDFSFSDF")
     if request.user.is_anonymous:
         service_shared_secret = request.headers.get('services-shared-secret')
         if service_shared_secret and service_shared_secret != os.environ.get('SERVICES_SHARED_SECRET'):
-            print("Authenticated by shared secret for user_id:", user_id)
             raise ValidationError("Invalid shared secret.")
 
     user = User.objects.filter(id=user_id).first()
     if not user:
-        print("User not found with id:", user_id)
         response = generate_response("failure", 400, {}, "User not found.")
         return Response(response, status=404)
     profile, created = UserProfile.objects.get_or_create(user=user)
@@ -289,7 +278,6 @@ def get_user_info_by_id(request, user_id):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
-    print('i got a hit')
     profile, created = UserProfile.objects.get_or_create(
         user=request.user
     )
@@ -602,7 +590,6 @@ def filter_influencers(request):
 
     if not filter_by_self: # added by RONI_VAI
         search_query = request.data.get('search') or request.data.get('keyword')
-        print(search_query)
         if search_query:
             queryset = queryset.filter(
                 Q(user__first_name__icontains=search_query) |
@@ -612,19 +599,14 @@ def filter_influencers(request):
                 Q(influencer_profile__short_bio__icontains=search_query) |
                 Q(influencer_profile__content_niches__icontains=search_query)
             )
-            print(f'total: {queryset.count()}')
 
-    print(json.dumps(request.data, indent=2))
     niche = request.data.get('content niches') or request.data.get('niche')
-        
-    print(f"DEBUG NICHE: {niche}")
 
     # following line added by RONI_VAI
     niche = (
         request.user.profile.brand_profile.business_type
         if filter_by_self else niche
     )
-    print(f"DEBUG NICHE FATER: {niche}")
 
     if niche and niche != "Content Niches":
         queryset = queryset.filter(influencer_profile__content_niches__icontains=niche)
@@ -826,9 +808,7 @@ def filter_influencers(request):
 
     reach = request.data.get('Audience Reach') or request.data.get('audience_reach')
 
-    print(">> REACH:", reach, len(queryset))
     if reach and reach != "audience_reach":
-        print("DEBUG")
         (audience_count_min, audience_count_max) = reach.strip().split(sep='-', maxsplit=2)
         audience_count_min, audience_count_max = int(audience_count_min), int(audience_count_max)
         
@@ -849,14 +829,7 @@ def filter_influencers(request):
         if audience_count_min:
             queryset=queryset.filter(net_follower__gte=audience_count_min)
 
-
-        for u in queryset:
-            print(u.net_follower)
-
         queryset = queryset.order_by('-is_verified', '-id')
-
-
-    print(f"TOTAL RESULT IS: {queryset.count()}")
 
     serializer = UserProfileSerializer(queryset, many=True)
 

@@ -33,12 +33,6 @@ interface AuthState {
   rehydrate: () => void;
 }
 
-const AUTH_COOKIE_OPTIONS = {
-  expires: 7,
-  path: "/",
-  sameSite: "lax" as const,
-};
-
 export const useAuthStore = create<AuthState>()(
   devtools((set, get) => ({
     // FIX: was reading localStorage synchronously at module init — causes SSR hydration mismatch
@@ -61,10 +55,8 @@ export const useAuthStore = create<AuthState>()(
     setToken: (token) => {
       if (token) {
         localStorage.setItem("access_token", token);
-        Cookies.set("access_token", token, AUTH_COOKIE_OPTIONS);
       } else {
         localStorage.removeItem("access_token");
-        Cookies.remove("access_token", { path: "/" });
       }
       set({ token });
     },
@@ -72,10 +64,8 @@ export const useAuthStore = create<AuthState>()(
     setRefreshToken: (refreshToken) => {
       if (refreshToken) {
         localStorage.setItem("refresh_token", refreshToken);
-        Cookies.set("refresh_token", refreshToken, AUTH_COOKIE_OPTIONS);
       } else {
         localStorage.removeItem("refresh_token");
-        Cookies.remove("refresh_token", { path: "/" });
       }
       set({ refreshToken });
     },
@@ -93,8 +83,6 @@ export const useAuthStore = create<AuthState>()(
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
-      Cookies.remove("access_token", { path: "/" });
-      Cookies.remove("refresh_token", { path: "/" });
       Cookies.remove("user_info", { path: "/" });
       set({ token: null, refreshToken: null, user: null });
     },

@@ -34,3 +34,4 @@ yarn-error.log*
 
 bkcoaching-main (3).zip
 env.txt
+backend/celery_service/celerybeat-schedule
