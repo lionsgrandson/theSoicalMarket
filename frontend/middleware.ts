@@ -5,6 +5,9 @@ import { getToken } from "next-auth/jwt";
 
 const PROTECTED = ["/brand-dashboard", "/influencer-dashboard", "/home_dashboard"];
 const AUTH_PAGES = ["/auth"];
+const nextAuthSecret =
+  process.env.NEXTAUTH_SECRET ||
+  (process.env.NODE_ENV !== "production" ? "local-dev-secret" : undefined);
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -14,9 +17,7 @@ export async function middleware(req: NextRequest) {
 
   let hasNextAuthSession = false;
   try {
-    hasNextAuthSession = Boolean(
-      await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-    );
+    hasNextAuthSession = Boolean(await getToken({ req, secret: nextAuthSecret }));
   } catch {
     hasNextAuthSession = false;
   }
