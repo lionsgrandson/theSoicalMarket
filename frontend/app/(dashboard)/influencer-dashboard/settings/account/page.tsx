@@ -32,7 +32,6 @@ interface NotificationItem {
 export default function SettingsPage() {
   
   const {user,setUser}=useAuthStore();
-  console.log(user);
   const [notifications, setNotifications] = useState<
     Record<NotificationKeys, boolean>
   >({

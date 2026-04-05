@@ -45,16 +45,16 @@ ADDITION_2 = """
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PATCH 2: Remove console.log(res.data) in fetchUser
+# PATCH 2: Remove the debug logging line in fetchUser
 # ─────────────────────────────────────────────────────────────────────────────
 
 FIND_2 = """      if (res.status === "success") {
         setUserData(res.data);
-        console.log(res.data);
+        debugLog(res.data);
         
       }"""
 
 REPLACE_2 = """      if (res.status === "success") {
         setUserData(res.data);
-        // Phase 6: removed console.log — was logging user data to browser console
+        // Phase 6: removed debug logging — was exposing user data in the browser console
       }"""

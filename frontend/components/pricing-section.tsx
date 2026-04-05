@@ -97,7 +97,6 @@ const isLoading =
       });
       setCurrPlanName(res?.data?.plan_name)
     } catch (error) {
-      console.log("error",error);
       
     }
   };

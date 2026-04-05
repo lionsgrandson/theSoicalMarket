@@ -46,7 +46,6 @@
 //     expiresAt: decoded.exp,
 //   };
   
-//   console.log(`🔄 Generated new Apple client secret, expires: ${new Date(decoded.exp * 1000).toISOString()}`);
   
 //   return token;
 // }

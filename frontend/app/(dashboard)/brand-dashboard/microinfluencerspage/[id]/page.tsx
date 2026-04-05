@@ -160,7 +160,6 @@ const [collaboration, setCollaboration] = useState<Collaboration | null>(null);
         const res = await apiClient(`user_service/get_a_influencer/${id}/`, {
           method: "GET",
         });
-        console.log(res);
 
         const profile = (res.data as ApiResponse | undefined)
           ?.influencer_profile;

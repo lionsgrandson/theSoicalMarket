@@ -158,7 +158,6 @@ export default function BrandPage() {
         });
 
         setAllBrands(normalised);
-        console.log(normalised);
       } catch (err) {
         console.error("Failed to load brands", err);
       } finally {

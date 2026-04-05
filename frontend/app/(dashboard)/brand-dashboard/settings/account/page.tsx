@@ -39,7 +39,6 @@ const { user,setUser } = useAuthStore();
     marketing: true,
   });
   
-  console.log(user);
   
 
 

@@ -1,4 +1,4 @@
-// app/page.tsx — Phase 6: FAQ uncommented, console.log removed, metadata added
+// app/page.tsx — Phase 6: FAQ uncommented, debug log removed, metadata added
 import type { Metadata } from "next";
 import FAQSection from "@/components/FAQSection";
 import Feature from "@/components/Feature";
@@ -46,7 +46,7 @@ async function getPlans() {
 
 export default async function HomePage() {
   const data = await getPlans();
-  // Phase 6: removed console.log(data) — was logging plan data to server logs in production
+  // Phase 6: removed debug plan logging — it was writing plan data to server logs in production
 
   return (
     <div>

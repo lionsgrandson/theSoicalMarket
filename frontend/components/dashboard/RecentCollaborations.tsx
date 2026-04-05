@@ -92,7 +92,6 @@ export function RecentCollaborations({
               );
 
               const profile = userRes.data?.influencer_profile;
-              console.log("Recent Collaborations",userRes);
               
               const total = calculateFollowers(
                 userRes.data?.influencer_profile

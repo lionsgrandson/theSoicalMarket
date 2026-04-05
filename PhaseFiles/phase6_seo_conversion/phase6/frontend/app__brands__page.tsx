@@ -1,5 +1,5 @@
 // app/brands/page.tsx
-// Phase 6: Added metadata + removed console.log.
+// Phase 6: Added metadata + removed debug logging.
 // Data fetching and BrandListWithSearch usage are identical to before.
 
 import type { Metadata } from "next";
@@ -54,6 +54,6 @@ export default async function BrandsPage() {
     }
   }
   const brands = await fetchBrands();
-  // Phase 6: removed console.log(brands)
+  // Phase 6: removed debug logging for the brands payload
   return <BrandListWithSearch brands={brands} />;
 }

@@ -172,7 +172,6 @@ function MessagesClientContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuthStore();
   const currentUserId = user?.user?.id;
-  console.log(currentUserId);
   const pathName = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -180,13 +179,11 @@ function MessagesClientContent() {
 
   const wsRef = useRef<WebSocket | null>(null);
   const virtuosoRef = useRef<any>(null);
-console.log("testing for firstUnreadIndex",messages);
   const firstUnreadIndex = useMemo(() => {
     return messages.findIndex(
       (m) => !m.seen && !m.isOwn
     );
   }, [messages,currentUserId]);
-  console.log("firstUnreadIndex",firstUnreadIndex);
 
 
   useEffect(() => {
@@ -201,7 +198,6 @@ console.log("testing for firstUnreadIndex",messages);
             target_user_id: Number(otherUserId),
           }),
         });
-        console.log("raw res", res);
 
         const matchedRoom = rooms.find(
           (room) => room.room_id === res?.data?.room_id
@@ -222,7 +218,6 @@ console.log("testing for firstUnreadIndex",messages);
         );
         // handle res if needed
       } catch (err) {
-        console.log("error", err);
       }
     };
 
@@ -249,7 +244,6 @@ console.log("testing for firstUnreadIndex",messages);
     );
   }, [rooms, selectedRoom?.room_id]);
 
-  console.log("when coming from outside", selectedRoom);
 
   useEffect(() => {
     const fetchOtherUserProfile = async () => {
@@ -265,7 +259,6 @@ console.log("testing for firstUnreadIndex",messages);
         setOtherUserProfile(response?.data);
         setOtherUserName(response?.data?.user?.first_name);
       } catch (error) {
-        console.log("error", error);
       }
     };
     fetchOtherUserProfile();
@@ -431,7 +424,6 @@ console.log("testing for firstUnreadIndex",messages);
             return rest;
           });
 
-          console.log("Sorted Messages:", cleanedMessages);
           setMessages(cleanedMessages);
         }
       } catch (err) {
@@ -461,12 +453,6 @@ console.log("testing for firstUnreadIndex",messages);
   // Initialize WebSocket
   useEffect(() => {
     if (!selectedRoom?.room_id || !currentUserId) {
-      console.log(
-        "Waiting for room or currentUserId. Room:",
-        selectedRoom,
-        "UserId:",
-        currentUserId
-      );
       return;
     }
 
@@ -493,17 +479,11 @@ console.log("testing for firstUnreadIndex",messages);
         ws.onmessage = (event) => {
           try {
             const payload = JSON.parse(event.data);
-            console.log(payload);
 
             const senderId = String(payload.sender_id);
             const myId = String(currentUserId);
             const isOwn = senderId === myId;
 
-            console.log("Message received:", {
-              sender_id: payload.sender_id,
-              current_user: userId,
-              isOwn: Number(payload.sender_id) == userId,
-            });
             // if (isOwn) return;
             // const isCurrentRoom = payload.room_id === selectedRoom?.room_id;
 
@@ -533,7 +513,6 @@ console.log("testing for firstUnreadIndex",messages);
 
             const hasContent = Boolean(incomingMessage || fileUrl);
             if (hasContent && isOwn == false) {
-              console.log("message printing");
 
               setMessages((prev) => [
                 ...prev,
@@ -568,7 +547,6 @@ console.log("testing for firstUnreadIndex",messages);
         };
 
         ws.onopen = () => {
-          console.log("WebSocket connected to room:", selectedRoom.room_id);
         };
 
         ws.onerror = (err) => {
@@ -576,7 +554,6 @@ console.log("testing for firstUnreadIndex",messages);
         };
 
         ws.onclose = () => {
-          console.log("WebSocket disconnected");
         };
       } catch (err) {
         console.error("Failed to initiate chat:", err);

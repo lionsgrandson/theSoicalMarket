@@ -99,7 +99,6 @@ export default function InfluencerProfile() {
   useEffect(() => {
     // Simulate API call - replace with actual backend integration
     const fetchInfluencer = async () => {
-      console.log("[v0] Fetching influencer profile for ID:", params.id);
 
       try {
         // Mock API delay
@@ -108,9 +107,7 @@ export default function InfluencerProfile() {
         const influencerData = mockInfluencerData[params.id];
         if (influencerData) {
           setInfluencer(influencerData);
-          console.log("[v0] Influencer data loaded:", influencerData);
         } else {
-          console.log("[v0] Influencer not found for ID:", params.id);
         }
       } catch (error) {
         console.error("[v0] Error fetching influencer:", error);
@@ -125,15 +122,10 @@ export default function InfluencerProfile() {
   }, [params.id]);
 
   const handleBack = () => {
-    console.log("[v0] Navigating back to micro-influencers page");
     router.push("/brand-dashboard/microinfluencerspage");
   };
 
   const handleMessage = () => {
-    console.log(
-      "[v0] Message button clicked for influencer:",
-      influencer?.name
-    );
 
     Swal.fire({
       title: "Do you want to chat?",
@@ -156,14 +148,12 @@ export default function InfluencerProfile() {
   };
 
   const handleSave = () => {
-    console.log("[v0] Save button clicked for influencer:", influencer?.name);
     // Add save/bookmark functionality here
   };
 
   const handleCopyLink = () => {
     const currentUrl = window.location.href;
     navigator.clipboard.writeText(currentUrl);
-    console.log("[v0] Profile link copied to clipboard:", currentUrl);
     // Add success notification here
   };
 

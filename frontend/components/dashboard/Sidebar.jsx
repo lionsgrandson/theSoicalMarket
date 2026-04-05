@@ -13,7 +13,6 @@ export function Sidebar({ links = [], setShowSideBar }) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
     const unreadCount = useChatStore((state) => state.unreadCount);
-    console.log("unreadCount from context",unreadCount);
  
     
 

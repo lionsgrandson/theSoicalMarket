@@ -99,13 +99,11 @@ export default function BrandProfilePage() {
           method: "GET",
         });
         setUserOtherData(res?.data?.res);
-        console.log(res);
         
 
         // ---- Normalise API → Brand ----
         const raw =
           (res.data.data as BrandResponse | undefined)?.brand_profile ?? {};
-          console.log(raw);
           
 
         const platforms: string[] = Array.isArray(raw.platforms)

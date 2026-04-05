@@ -127,10 +127,8 @@ function InfluencerDashboardContent() {
     id: number | null;
     action: "accept" | "reject" | null;
   }>({ id: null, action: null });
-  console.log(user, "name", user?.user?.first_name);
   const unread = useNotificationStore((s) => s.unreadCount);
   const noti = useNotificationStore((s) => s.notifications);
-  console.log(unread, "message notification", noti);
   const proposalRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
   // const store = useAuthStore.getState();
@@ -189,7 +187,6 @@ function InfluencerDashboardContent() {
           }
         );
         if (res.data) {
-          console.log("All proposals",res.data);
 
           setCampaigns(res.data);
         }
@@ -234,7 +231,6 @@ function InfluencerDashboardContent() {
         // Rejected ones (404s) are simply skipped
       });
 
-        console.log("All Brand", map);
 
         setBrandMap(map);
       } catch (error) {
@@ -374,7 +370,6 @@ function InfluencerDashboardContent() {
 
   const unReadMessage = roomData.filter((room) => room.seen == false);
 
-  console.log(campaigns);
 
   const acceptedCampaign = campaigns.filter(
     (campaign) => campaign.is_accepted_by_influencer == true

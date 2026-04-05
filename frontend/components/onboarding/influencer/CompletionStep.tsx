@@ -70,7 +70,6 @@ blog_follower:number;
 }
 
 const transformInfluencerDataForAPI = (data: InfluencerOnboardingData) => {
-  console.log("profile_picture:", data.profile_picture);
 
   const payload = {
     is_influencer_profile_complete:true,
@@ -175,7 +174,6 @@ const CompletionStep = ({ onComplete }: CompletionStepProps) => {
 
 //       try {
 //         const onboardingData = JSON.parse(storedData) as InfluencerOnboardingData;
-//         console.log("profile_picture:", onboardingData.profile_picture);
 
 //         const apiPayload = transformInfluencerDataForAPI(onboardingData);
 

@@ -6,7 +6,7 @@
 ## What this adds
 - Notification bell WebSocket reconnected (was commented out — no real-time notifications)
 - WebSocket now uses env var instead of hardcoded expired tunnel URL
-- All console.logs removed from dashboard header
+- All debug logs removed from dashboard header
 - EmptyState component: shows a friendly message with a CTA when lists are empty
 - ErrorBoundary component: stops one broken component from crashing the whole page
 - Brand can now rate the influencer AND influencer can now rate the brand (was one-sided)
@@ -57,7 +57,7 @@ Also add brand_rating field to campaign_service/campaign/models.py Hire class:
 
   DashboardTopHeader.jsx
     → components/dashboard/DashboardTopHeader.jsx
-    CHANGES: All console.logs removed. WebSocket connection uncommented and
+    CHANGES: All debug logs removed. WebSocket connection uncommented and
     fixed to use NEXT_PUBLIC_WS_URL env var. Cookies import removed.
     Notification bell works with real-time WebSocket updates.
 
@@ -90,7 +90,7 @@ Also add brand_rating field to campaign_service/campaign/models.py Hire class:
 
 
 ## VERIFY
-  □ Dashboard header loads with no console.logs
+  □ Dashboard header loads with no debug logs
   □ Notification bell shows badge when there are unseen notifications
   □ Clicking the bell opens the dropdown; notifications show correctly
   □ "Mark all read" clears the badge

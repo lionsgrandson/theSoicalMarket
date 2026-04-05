@@ -36,7 +36,7 @@ Read these two guide files — they contain step-by-step instructions:
 
 The Phase 1+2 frontend package already contains the fully corrected:
   - useAuthStore.ts (no more duplicate Cookies.set)
-  - AuthSessionSync.tsx (no more console.logs)
+  - AuthSessionSync.tsx (no more debug logs)
   - nextauth__route.ts (debug:false, field name fixed)
   - middleware.ts (correct catch block)
 

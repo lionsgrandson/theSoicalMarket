@@ -135,7 +135,6 @@ const splitBusinessTypes = (value: string): string[] => {
 
 export default function BrandSetupPage() {
   const { user, setUser } = useAuthStore();
-  console.log(user);
 
   const profile = (user?.brand_profile as BrandProfile | undefined) ?? {};
   const fileInputRef = useRef<HTMLInputElement>(null);

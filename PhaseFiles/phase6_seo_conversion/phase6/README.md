@@ -9,8 +9,8 @@
 - The public influencer/brand browse pages were behind a blur paywall —
   visitors could not evaluate the platform before signing up.
 - FAQ was commented out on the homepage since launch.
-- console.log(data) was logging plan data to the server on every page load.
-- Pricing section had a console.log leaking user data.
+- A debug plan log was writing plan data to the server on every page load.
+- Pricing section had a debug log leaking user data.
 
 
 ## FILE NAMING CONVENTION
@@ -39,7 +39,7 @@ Files starting with PATCH__ are instructions — read and apply, do not copy.
 
   app__page.tsx
     → app/page.tsx
-    CHANGES: FAQ uncommented, metadata added, console.log removed
+    CHANGES: FAQ uncommented, metadata added, debug log removed
 
   app__microinfluencers__page.tsx
     → app/microinfluencers/page.tsx
@@ -48,7 +48,7 @@ Files starting with PATCH__ are instructions — read and apply, do not copy.
 
   app__brands__page.tsx
     → app/brands/page.tsx
-    CHANGES: metadata added, console.log removed
+    CHANGES: metadata added, debug log removed
     (data fetching logic is identical to before)
 
 
@@ -63,8 +63,8 @@ Files starting with PATCH__ are instructions — read and apply, do not copy.
 
   PATCH__components__pricing_section.tsx
     → Two changes:
-      1. Remove console.log(res.data) from the fetchUser function
-         (find it by searching for console.log(res.data) in the file)
+      1. Remove the debug logging line from the fetchUser function
+         (find the line that logs `res.data` in the file)
       2. Add "Most Popular" badge to the middle plan — follow the
          instructions and code snippet in the PATCH file.
 

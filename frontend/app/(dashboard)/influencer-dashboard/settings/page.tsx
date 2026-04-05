@@ -127,7 +127,6 @@ const splitContentNiches = (value: string): string[] => {
 };
 export default function ProfilePage() {
   const { user,setUser } = useAuthStore();
-  console.log(user);
   
   const p: StoredInfluencerProfile =
     (user?.influencer_profile as StoredInfluencerProfile | undefined) ?? {};

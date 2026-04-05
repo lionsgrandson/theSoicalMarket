@@ -117,7 +117,6 @@ export default function MessagesPage() {
   const searchParams = useSearchParams();
   const params = useParams();
   const { id } = params;
-  console.log(id);
 
   useEffect(() => {
     const userId = searchParams.get("userId");

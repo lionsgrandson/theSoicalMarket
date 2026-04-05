@@ -3,7 +3,7 @@
 // components/dashboard/DashboardTopHeader.jsx
 // Phase 7: Cleaned up version of the existing file.
 // Changes:
-//   - All console.log statements removed (were logging notification data)
+//   - All debug log statements removed (were logging notification data)
 //   - WebSocket connection uncommented and fixed to use env var (not hardcoded URL)
 //   - Cookies import removed (NextAuth owns the cookie now)
 
