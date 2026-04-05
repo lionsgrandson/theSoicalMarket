@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from .fields import EncryptedCharField
 import requests
 import base64
 
@@ -42,10 +43,10 @@ class InfluencerInfo(models.Model):
     # payment info
     payment_method = models.CharField(max_length=20, blank=True, null=True)
     account_holder_name = models.CharField(max_length=50, blank=True, null=True)
-    account_number = models.CharField(max_length=50, blank=True, null=True)
-    routing_number = models.CharField(max_length=50, blank=True, null=True)
-    bank_name = models.CharField(max_length=50, blank=True, null=True)
-    paypal_email = models.CharField(max_length=50, blank=True, null=True)
+    account_number = EncryptedCharField(max_length=100, blank=True, null=True)
+    routing_number = EncryptedCharField(max_length=100, blank=True, null=True)
+    bank_name = EncryptedCharField(max_length=100, blank=True, null=True)
+    paypal_email = EncryptedCharField(max_length=100, blank=True, null=True)
 
 # 20 -500
 
@@ -211,10 +212,26 @@ LOG_TYPE_ALIASES=(
     "FIRST_MESSAGE",
     "NEW_INFLUENCER",
     "NEW_BRAND",
+    "SUBSCRIPTION_CREATED",
+    "SUBSCRIPTION_CANCELED",
+    "CAMPAIGN_COMPLETED",
 )
 
 class Log(models.Model):
-    type_alias = models.CharField(choices=tuple(zip(LOG_TYPE_ALIASES, LOG_TYPE_ALIASES)), max_length=20, null=True)
+    type_alias = models.CharField(choices=tuple(zip(LOG_TYPE_ALIASES, LOG_TYPE_ALIASES)), max_length=30, null=True)
 
     text = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
+
+
+class SavedInfluencer(models.Model):
+    brand_user_id = models.IntegerField()
+    influencer_user_id = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['brand_user_id', 'influencer_user_id']]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Brand {self.brand_user_id} saved Influencer {self.influencer_user_id}"

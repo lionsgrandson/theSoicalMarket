@@ -122,47 +122,34 @@ const CompletionStep = ({ onComplete }: CompletionStepProps) => {
 
   
   const { token } = useAuthStore();
-  console.log("CompletionStep rendered, token:", token);
 
   useEffect(() => {
-    console.log("CompletionStep useEffect triggered");
-    console.log("Token exists:", !!token);
 
     const submitOnboardingData = async () => {
-      console.log("submitOnboardingData function called");
       const storedData = localStorage.getItem("brandOnBoardingData");
-      console.log("Stored data exists:", !!storedData);
 
       if (!storedData) {
-        console.log("No stored data found, returning early");
         return;
       }
 
       try {
-        console.log("Parsing stored data...");
         const onboardingData = JSON.parse(storedData) as OnboardingData;
-        console.log("Parsed onboarding data:", onboardingData);
 
         // Submit profile data to user_service
-        console.log("Submitting profile data...");
         const profilePayload = transformProfileDataForAPI(onboardingData);
-        console.log("Profile payload:", profilePayload);
 
        const res= await apiClient("user_service/update_user_profile/", {
           method: "PATCH",
           auth: true,
           body: JSON.stringify(profilePayload),
         });
-        console.log("Profile data submitted successfully");
         if(res.code==200){
       setUser(res.data);
       localStorage.removeItem("InfluencerOnboardingData");
      }
         // Submit campaign data to campaign_service
-        console.log("Submitting campaign data...");
         
         const campaignPayload = transformCampaignDataForAPI(onboardingData);
-        console.log("Campaign payload:", campaignPayload);
 
         if (onboardingData?.campaignName) {
           await apiClient("campaign_service/create_campaign/", {
@@ -170,9 +157,7 @@ const CompletionStep = ({ onComplete }: CompletionStepProps) => {
           auth: true,
           body: JSON.stringify(campaignPayload),
         });
-        console.log("Campaign data submitted successfully");
         } else {
-          console.log("No campaign data found, skipping campaign creation");
         }
        localStorage.removeItem("brandOnBoardingData");
         
@@ -182,7 +167,6 @@ const CompletionStep = ({ onComplete }: CompletionStepProps) => {
         //   description: "Your brand profile and campaign are now live.",
         // });
         
-        console.log("Onboarding data removed from localStorage");
       } catch (error) {
         console.error("Failed to submit onboarding data:", error);
         toast({ title: "Error Saving Profile", variant: "destructive" });
@@ -190,10 +174,8 @@ const CompletionStep = ({ onComplete }: CompletionStepProps) => {
     };
 
     if (token) {
-      console.log("Token exists, calling submitOnboardingData...");
       submitOnboardingData();
     } else {
-      console.log("No token found, skipping submitOnboardingData");
     }
   }, [token]);
 
@@ -205,7 +187,6 @@ const CompletionStep = ({ onComplete }: CompletionStepProps) => {
           auth: true,
         });
 
-        console.log("✅ User Info:", res);
       } catch (error) {
         console.error("❌ API Error:", error);
       }

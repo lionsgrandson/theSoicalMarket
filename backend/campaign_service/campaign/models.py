@@ -114,6 +114,6 @@ class Hire(models.Model):
     is_completed_marked_by_brand = models.BooleanField(default=False)
     budget = models.FloatField(default=0.0)
     rating = models.FloatField(default=0.0)
+    brand_rating = models.FloatField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, null=True)
     budgetNegotiable = models.BooleanField(default=False)
-

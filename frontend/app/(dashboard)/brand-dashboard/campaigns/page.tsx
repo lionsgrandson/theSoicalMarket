@@ -359,7 +359,6 @@ function CampaignDashboardContent() {
         const data: HiringCampaign[] = hiringsRes.data;
 
         if (data && Array.isArray(data)) {
-          console.log(data);
 
           setPreviousHirings(data);
 
@@ -375,7 +374,6 @@ function CampaignDashboardContent() {
           setUniqueInfluencer(uniqueByInfluencer);
         }
       } catch (error) {
-        console.log(error);
       }
     };
 
@@ -632,7 +630,6 @@ function CampaignDashboardContent() {
         auth: true,
         body: JSON.stringify({ campaign_status: status }),
       });
-      console.log(res);
       if (res.code == 200) {
         // Update the local campaigns list with the new status
         setAllCampaigns((prev) =>

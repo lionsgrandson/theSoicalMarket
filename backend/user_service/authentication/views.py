@@ -12,15 +12,34 @@ from .serializers import *
 from .utils import generate_response, send_otp_via_email, get_frequent_platforms, get_hires_and_campaigns
 from django.views.decorators.csrf import csrf_exempt
 import json
-import httpx
-
 import os
+import logging
 
 from django.core.mail import send_mail
 
 from rest_framework.pagination import PageNumberPagination
 
 from django.db.models import Q, F
+
+logger = logging.getLogger(__name__)
+
+
+def _dispatch(event: str, payload: dict):
+    """Queue a Celery automation event without breaking the main request."""
+    try:
+        from celery_s.automations import dispatch_automation_event
+        dispatch_automation_event.delay(event, payload)
+    except Exception as e:
+        logger.warning(f"[views] automation dispatch failed for {event}: {e}")
+
+
+def _queue_match_fanout(user_id: int, signed_up_as: str):
+    """Queue the Phase 4 matching fan-out task after signup."""
+    try:
+        from celery_s.automations import run_match_fanout
+        run_match_fanout.delay(user_id, signed_up_as or 'influencer')
+    except Exception as e:
+        logger.warning(f"[views] run_match_fanout failed for user {user_id}: {e}")
 
 
 
@@ -76,6 +95,7 @@ def signup(request):
     user_profile.brand_profile = bi
     user_profile.signed_up_as = signed_up_as
     user_profile.save()
+    _queue_match_fanout(user.id, signed_up_as)
 
 
     refresh = RefreshToken.for_user(user)
@@ -90,27 +110,9 @@ def signup(request):
             f"{ii.display_name if signed_up_as in ['influencer', 'both'] else bi.display_name}"
         )
     )
+    _dispatch('PROFILE_INCOMPLETE', {'user_id': user.id})
 
     response = generate_response("Success", 201, {"Message": "Succesfully Created User.", 'refresh_token': str(refresh),  'access_token': str(access_token)})
-    message = f"""
-    Dear {first_name},<br>
-    From The Social Market<br>
-    Your account has been successfully created. Click <a href="https://thesocialmarket.com">here</a> to complete your profile.<br>
-    Best Regards,<br>
-    The Social Market Team
-    """
-
-    print("DEBUG SECRET CODE......")
-    print("DEBUG SECRET CODE......")
-    print(os.environ['SERVICES_SHARED_SECRET'])
-    res = httpx.post(
-        f"http://celery_service:8000/send_email_if_profile_not_complete/{user_profile.user.id}/",
-        headers={"Host": "localhost", "services-shared-secret": os.environ['SERVICES_SHARED_SECRET']},
-        json={"message": message}
-    )
-    print(res.request.headers)
-    # print(res.text)
-    res.raise_for_status()
     return Response(response, status=status.HTTP_201_CREATED)
 # ^&ASDF()_+|}{F:J./?><d,.a/;'[]=-098^d21
 # ^&ASDF()_+|}{F:J./?><d,.a/;'[]=-098^d21 
@@ -166,6 +168,7 @@ def social_signup_signin(request):
     user_profile.brand_profile = bi
     user_profile.signed_up_as = signed_up_as
     user_profile.save()
+    _queue_match_fanout(user.id, signed_up_as)
 
 
     refresh = RefreshToken.for_user(user)
@@ -175,6 +178,7 @@ def social_signup_signin(request):
 
 
     response = generate_response("Success", 201, {"Message": "Succesfully Created User.", 'refresh_token': str(refresh),  'access_token': str(access_token)})
+    _dispatch('PROFILE_INCOMPLETE', {'user_id': user.id})
 
 
     return Response(response, status=status.HTTP_201_CREATED)
@@ -208,8 +212,6 @@ def login(request):
 
 
     response = generate_response("success", 200, {'refresh_token': str(refresh),  'access_token': str(access_token)})
-
-    print('I am hitted')
     return Response(response, status=200)
 
 
@@ -221,12 +223,6 @@ def get_user_info(request):
     profile, created = UserProfile.objects.get_or_create(user=user)
 
     data = UserProfileSerializer(profile).data
-
-    print(">>>>>>>>>>")
-    print(">>>>>>>>>>")
-    
-    print(data['is_brand_profile_complete'])
-    print(data['is_influencer_profile_complete'])
     response = generate_response("success", 200, data)
 
     return Response(
@@ -238,16 +234,13 @@ def get_user_info(request):
 @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 def get_user_info_by_id(request, user_id):
-    print("DEBUG .........SDFSDFSFSDF")
     if request.user.is_anonymous:
         service_shared_secret = request.headers.get('services-shared-secret')
         if service_shared_secret and service_shared_secret != os.environ.get('SERVICES_SHARED_SECRET'):
-            print("Authenticated by shared secret for user_id:", user_id)
             raise ValidationError("Invalid shared secret.")
 
     user = User.objects.filter(id=user_id).first()
     if not user:
-        print("User not found with id:", user_id)
         response = generate_response("failure", 400, {}, "User not found.")
         return Response(response, status=404)
     profile, created = UserProfile.objects.get_or_create(user=user)
@@ -285,7 +278,6 @@ def get_user_info_by_id(request, user_id):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
-    print('i got a hit')
     profile, created = UserProfile.objects.get_or_create(
         user=request.user
     )
@@ -526,28 +518,10 @@ def verify_email(request):
 
         if profile.current_verification_code == otp:
             profile.is_verified = True
+            profile.current_verification_code = None
             profile.save()
             response = generate_response("success", 200, "Successfully Verified Your Email.")
-            send_mail(
-                subject="Email Verified",
-                message=f"""
-Dear {user.first_name},<br>
-From The Social Market<br>
-Your email has been successfully verified. visit https://thesocialmarket.ai to continue setting up your account.<br>
-Best Regards,<br>
-The Social Market Team
-                """,
-                html_message=f"""
-Dear {user.first_name},
-From The Social Market<br>
-Your email has been successfully verified. Click <a href="https://thesocialmarket.ai">here</a> to continue setting up your account.<br>
-Best Regards,<br>
-The Social Market Team
-                """,
-
-                recipient_list=[email],
-                from_email='noreply@thesocialmarket.ai'
-            )
+            _dispatch('EMAIL_VERIFIED', {'user_id': user.id})
             return Response(response, 200)
         else:
             response = generate_response("failure", 400, {}, "Invalid Otp Code.")
@@ -588,24 +562,7 @@ def reset_password(request):
 
 
         response = generate_response("success", 200, "Successfully reset your password.")
-        send_mail(
-            subject="Password Reset Successfully",
-            message=f"""
-Dear {user.first_name},<br>
-Your password has been reset successfully. Log in https://thesocialmarket.ai to continue with your new password.<br>
-Best Regards,<br>
-The Social Market Team
-            """,
-            html_message=f"""
-Dear {user.first_name},<br>
-Your password has been reset successfully. Log in <a href="https://thesocialmarket.ai">here</a> with your new password.<br>
-Best Regards,<br>
-The Social Market Team
-            """,
-
-            recipient_list=[email],
-            from_email='noreply@thesocialmarket.ai'
-        )
+        _dispatch('PASSWORD_RESET_SUCCESS', {'user_id': user.id})
         return Response(response, 200)
 
     except Exception as e:
@@ -633,7 +590,6 @@ def filter_influencers(request):
 
     if not filter_by_self: # added by RONI_VAI
         search_query = request.data.get('search') or request.data.get('keyword')
-        print(search_query)
         if search_query:
             queryset = queryset.filter(
                 Q(user__first_name__icontains=search_query) |
@@ -643,19 +599,14 @@ def filter_influencers(request):
                 Q(influencer_profile__short_bio__icontains=search_query) |
                 Q(influencer_profile__content_niches__icontains=search_query)
             )
-            print(f'total: {queryset.count()}')
 
-    print(json.dumps(request.data, indent=2))
     niche = request.data.get('content niches') or request.data.get('niche')
-        
-    print(f"DEBUG NICHE: {niche}")
 
     # following line added by RONI_VAI
     niche = (
         request.user.profile.brand_profile.business_type
         if filter_by_self else niche
     )
-    print(f"DEBUG NICHE FATER: {niche}")
 
     if niche and niche != "Content Niches":
         queryset = queryset.filter(influencer_profile__content_niches__icontains=niche)
@@ -741,120 +692,123 @@ def filter_influencers(request):
 
     budget_range = request.data.get('budget_range')
     if budget_range:
-        (budget_min, budget_max) = reach.strip().split(sep='-', maxsplit=2)
-        budget_min, budget_max = int(audience_count_min), int(audience_count_max)
-        
-        qs = queryset.annotate(
-            repost_min=Cast(SplitPart('rate_range_for_repost', '-', 1), FloatField()),
-            repost_max=Cast(SplitPart('rate_range_for_repost', '-', 2), FloatField()),
+        try:
+            parts = budget_range.strip().split('-', maxsplit=1)
+            if len(parts) == 2:
+                budget_min = int(parts[0].strip())
+                budget_max = int(parts[1].strip())
 
-            instagram_story_min=Cast(
-                SplitPart('rate_range_for_instagram_story', '-', 1),
-                FloatField()
-            ),
-            instagram_story_max=Cast(
-                SplitPart('rate_range_for_instagram_story', '-', 2),
-                FloatField()
-            ),
-            instagram_reel_min=Cast(
-                SplitPart('rate_range_for_instagram_reel', '-', 1),
-                FloatField()
-            ),
-            instagram_reel_max=Cast(
-                SplitPart('rate_range_for_instagram_reel', '-', 2),
-                FloatField()
-            ),
-            tiktok_video_min=Cast(
-                SplitPart('rate_range_for_tiktok_video', '-', 1),
-                FloatField()
-            ),
-            tiktok_video_max=Cast(
-                SplitPart('rate_range_for_tiktok_video', '-', 2),
-                FloatField()
-            ),
-            podcast_mention_min=Cast(
-                SplitPart('rate_range_for_podcast_mention', '-', 1),
-                FloatField()
-            ),
-            podcast_mention_max=Cast(
-                SplitPart('rate_range_for_podcast_mention', '-', 2),
-                FloatField()
-            ),
-            live_stream_min=Cast(
-                SplitPart('rate_range_for_live_stream', '-', 1),
-                FloatField()
-            ),
-            live_stream_max=Cast(
-                SplitPart('rate_range_for_live_stream', '-', 2),
-                FloatField()
-            ),
-            ugc_creation_min=Cast(
-                SplitPart('rate_range_for_ugc_creation', '-', 1),
-                FloatField()
-            ),
-            ugc_creation_max=Cast(
-                SplitPart('rate_range_for_ugc_creation', '-', 2),
-                FloatField()
-            ),
-            whatsapp_status_min=Cast(
-                SplitPart('rate_range_for_whatsapp_status_post', '-', 1),
-                FloatField()
-            ),
-            whatsapp_status_max=Cast(
-                SplitPart('rate_range_for_whatsapp_status_post', '-', 2),
-                FloatField()
-            ),
-            affiliate_min=Cast(
-                SplitPart('rate_range_for_affiliate_marketing_percent', '-', 1),
-                FloatField()
-            ),
-            affiliate_max=Cast(
-                SplitPart('rate_range_for_affiliate_marketing_percent', '-', 2),
-                FloatField()
-            ),
-            facebook_post_min=Cast(
-                SplitPart('rate_range_for_facebook_post', '-', 1),
-                FloatField()
-            ),
-            facebook_post_max=Cast(
-                SplitPart('rate_range_for_facebook_post', '-', 2),
-                FloatField()
-            ),
-        ).annotate(
-            budget_min=Least(
-                Coalesce('repost_min', Value(1e18)),
-                Coalesce('instagram_story_min', Value(1e18)),
-                Coalesce('instagram_reel_min', Value(1e18)),
-                Coalesce('tiktok_video_min', Value(1e18)),
-                Coalesce('podcast_mention_min', Value(1e18)),
-                Coalesce('live_stream_min', Value(1e18)),
-                Coalesce('ugc_creation_min', Value(1e18)),
-                Coalesce('whatsapp_status_min', Value(1e18)),
-                Coalesce('affiliate_min', Value(1e18)),
-                Coalesce('facebook_post_min', Value(1e18)),
-            ),
-            budget_max=Greatest(
-                Coalesce('repost_max', Value(0)),
-                Coalesce('instagram_story_max', Value(0)),
-                Coalesce('instagram_reel_max', Value(0)),
-                Coalesce('tiktok_video_max', Value(0)),
-                Coalesce('podcast_mention_max', Value(0)),
-                Coalesce('live_stream_max', Value(0)),
-                Coalesce('ugc_creation_max', Value(0)),
-                Coalesce('whatsapp_status_max', Value(0)),
-                Coalesce('affiliate_max', Value(0)),
-                Coalesce('facebook_post_max', Value(0)),
-            )
-        ).filter(budget_min__lte=budget_min, budget_max__gte=budget_max)
+                queryset = queryset.annotate(
+                    repost_min=Cast(SplitPart('rate_range_for_repost', '-', 1), FloatField()),
+                    repost_max=Cast(SplitPart('rate_range_for_repost', '-', 2), FloatField()),
+
+                    instagram_story_min=Cast(
+                        SplitPart('rate_range_for_instagram_story', '-', 1),
+                        FloatField()
+                    ),
+                    instagram_story_max=Cast(
+                        SplitPart('rate_range_for_instagram_story', '-', 2),
+                        FloatField()
+                    ),
+                    instagram_reel_min=Cast(
+                        SplitPart('rate_range_for_instagram_reel', '-', 1),
+                        FloatField()
+                    ),
+                    instagram_reel_max=Cast(
+                        SplitPart('rate_range_for_instagram_reel', '-', 2),
+                        FloatField()
+                    ),
+                    tiktok_video_min=Cast(
+                        SplitPart('rate_range_for_tiktok_video', '-', 1),
+                        FloatField()
+                    ),
+                    tiktok_video_max=Cast(
+                        SplitPart('rate_range_for_tiktok_video', '-', 2),
+                        FloatField()
+                    ),
+                    podcast_mention_min=Cast(
+                        SplitPart('rate_range_for_podcast_mention', '-', 1),
+                        FloatField()
+                    ),
+                    podcast_mention_max=Cast(
+                        SplitPart('rate_range_for_podcast_mention', '-', 2),
+                        FloatField()
+                    ),
+                    live_stream_min=Cast(
+                        SplitPart('rate_range_for_live_stream', '-', 1),
+                        FloatField()
+                    ),
+                    live_stream_max=Cast(
+                        SplitPart('rate_range_for_live_stream', '-', 2),
+                        FloatField()
+                    ),
+                    ugc_creation_min=Cast(
+                        SplitPart('rate_range_for_ugc_creation', '-', 1),
+                        FloatField()
+                    ),
+                    ugc_creation_max=Cast(
+                        SplitPart('rate_range_for_ugc_creation', '-', 2),
+                        FloatField()
+                    ),
+                    whatsapp_status_min=Cast(
+                        SplitPart('rate_range_for_whatsapp_status_post', '-', 1),
+                        FloatField()
+                    ),
+                    whatsapp_status_max=Cast(
+                        SplitPart('rate_range_for_whatsapp_status_post', '-', 2),
+                        FloatField()
+                    ),
+                    affiliate_min=Cast(
+                        SplitPart('rate_range_for_affiliate_marketing_percent', '-', 1),
+                        FloatField()
+                    ),
+                    affiliate_max=Cast(
+                        SplitPart('rate_range_for_affiliate_marketing_percent', '-', 2),
+                        FloatField()
+                    ),
+                    facebook_post_min=Cast(
+                        SplitPart('rate_range_for_facebook_post', '-', 1),
+                        FloatField()
+                    ),
+                    facebook_post_max=Cast(
+                        SplitPart('rate_range_for_facebook_post', '-', 2),
+                        FloatField()
+                    ),
+                ).annotate(
+                    budget_min=Least(
+                        Coalesce('repost_min', Value(1e18)),
+                        Coalesce('instagram_story_min', Value(1e18)),
+                        Coalesce('instagram_reel_min', Value(1e18)),
+                        Coalesce('tiktok_video_min', Value(1e18)),
+                        Coalesce('podcast_mention_min', Value(1e18)),
+                        Coalesce('live_stream_min', Value(1e18)),
+                        Coalesce('ugc_creation_min', Value(1e18)),
+                        Coalesce('whatsapp_status_min', Value(1e18)),
+                        Coalesce('affiliate_min', Value(1e18)),
+                        Coalesce('facebook_post_min', Value(1e18)),
+                    ),
+                    budget_max=Greatest(
+                        Coalesce('repost_max', Value(0)),
+                        Coalesce('instagram_story_max', Value(0)),
+                        Coalesce('instagram_reel_max', Value(0)),
+                        Coalesce('tiktok_video_max', Value(0)),
+                        Coalesce('podcast_mention_max', Value(0)),
+                        Coalesce('live_stream_max', Value(0)),
+                        Coalesce('ugc_creation_max', Value(0)),
+                        Coalesce('whatsapp_status_max', Value(0)),
+                        Coalesce('affiliate_max', Value(0)),
+                        Coalesce('facebook_post_max', Value(0)),
+                    )
+                ).filter(budget_min__lte=budget_min, budget_max__gte=budget_max)
+        except (ValueError, IndexError):
+            pass
 
 
 
 
     reach = request.data.get('Audience Reach') or request.data.get('audience_reach')
 
-    print(">> REACH:", reach, len(queryset))
     if reach and reach != "audience_reach":
-        print("DEBUG")
         (audience_count_min, audience_count_max) = reach.strip().split(sep='-', maxsplit=2)
         audience_count_min, audience_count_max = int(audience_count_min), int(audience_count_max)
         
@@ -875,14 +829,7 @@ def filter_influencers(request):
         if audience_count_min:
             queryset=queryset.filter(net_follower__gte=audience_count_min)
 
-
-        for u in queryset:
-            print(u.net_follower)
-
         queryset = queryset.order_by('-is_verified', '-id')
-
-
-    print(f"TOTAL RESULT IS: {queryset.count()}")
 
     serializer = UserProfileSerializer(queryset, many=True)
 
@@ -928,7 +875,7 @@ def create_feedback(request):
     })
 
 
-from .models import LOG_TYPE_ALIASES, Log
+from .models import LOG_TYPE_ALIASES, Log, SavedInfluencer
 
 
 @api_view(['POST'])
@@ -1002,3 +949,71 @@ def create_log(request):
             )
         )
     return Response({"success": True})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_influencer(request, influencer_id):
+    user_id = request.user.id
+    obj, created = SavedInfluencer.objects.get_or_create(
+        brand_user_id=user_id,
+        influencer_user_id=influencer_id,
+    )
+    if not created:
+        return Response(generate_response("success", 200, {"message": "Already saved."}), 200)
+    return Response(generate_response("success", 201, {"message": "Influencer saved."}), 201)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def unsave_influencer(request, influencer_id):
+    user_id = request.user.id
+    deleted, _ = SavedInfluencer.objects.filter(
+        brand_user_id=user_id,
+        influencer_user_id=influencer_id,
+    ).delete()
+    if deleted:
+        return Response(generate_response("success", 200, {"message": "Removed from saved."}), 200)
+    return Response(generate_response("failure", 404, {}, "Not saved."), 404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_saved_influencers(request):
+    user_id = request.user.id
+    saved_ids = SavedInfluencer.objects.filter(
+        brand_user_id=user_id
+    ).values_list('influencer_user_id', flat=True)
+
+    profiles = UserProfile.objects.filter(
+        user_id__in=saved_ids,
+    ).select_related('user', 'influencer_profile')
+
+    serializer = UserProfileSerializer(profiles, many=True)
+    return Response(generate_response("success", 200, serializer.data), 200)
+
+
+@api_view(['GET'])
+def get_platform_stats(request):
+    total_users = UserProfile.objects.count()
+    total_influencers = UserProfile.objects.filter(
+        signed_up_as__in=["influencer", "both"]
+    ).count()
+    total_brands = UserProfile.objects.filter(
+        signed_up_as__in=["brand", "both"]
+    ).count()
+    completed_campaigns = Log.objects.filter(type_alias="CAMPAIGN_COMPLETED").count()
+
+    return Response(
+        generate_response(
+            "success",
+            200,
+            {
+                "total_users": total_users,
+                "total_influencers": total_influencers,
+                "total_brands": total_brands,
+                "campaigns_completed": completed_campaigns,
+            },
+        ),
+        200,
+    )

@@ -95,7 +95,6 @@ const token=localStorage.getItem("access_token");
     );
 
     if (token) {
-      console.log(token);
       
       onNext();
     }else{

@@ -22,6 +22,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
 import { MicroInfluencer } from "@/types/micro-influencer";
  interface Campaign {
@@ -141,6 +142,8 @@ export default function BrandProfilePage() {
   const [influencer, SetInfluencer] = useState<MicroInfluencer | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
   const router = useRouter();
 const [collaboration, setCollaboration] = useState<Collaboration | null>(null);
 
@@ -157,7 +160,6 @@ const [collaboration, setCollaboration] = useState<Collaboration | null>(null);
         const res = await apiClient(`user_service/get_a_influencer/${id}/`, {
           method: "GET",
         });
-        console.log(res);
 
         const profile = (res.data as ApiResponse | undefined)
           ?.influencer_profile;
@@ -352,6 +354,54 @@ useEffect(()=>{
     fetchData();
           
   },[id]);
+
+  useEffect(() => {
+    const fetchSavedInfluencers = async () => {
+      if (!id) return;
+      try {
+        const res = await apiClient("user_service/get_saved_influencers/", {
+          method: "GET",
+          auth: true,
+        });
+        const saved: Array<{ id?: string | number; user?: { id?: string | number } }> =
+          Array.isArray(res?.data) ? res.data : [];
+        setIsSaved(
+          saved.some((profile) => String(profile.user?.id ?? profile.id) === String(id))
+        );
+      } catch {
+        setIsSaved(false);
+      }
+    };
+
+    fetchSavedInfluencers();
+  }, [id]);
+
+  const handleSaveToggle = async () => {
+    if (!id || saveLoading) return;
+    setSaveLoading(true);
+
+    try {
+      if (isSaved) {
+        await apiClient(`user_service/unsave_influencer/${id}/`, {
+          method: "DELETE",
+          auth: true,
+        });
+        setIsSaved(false);
+        toast("Removed from saved influencers");
+      } else {
+        await apiClient(`user_service/save_influencer/${id}/`, {
+          method: "POST",
+          auth: true,
+        });
+        setIsSaved(true);
+        toast("Influencer saved");
+      }
+    } catch {
+      toast("Unable to update saved influencers");
+    } finally {
+      setSaveLoading(false);
+    }
+  };
   // -------------------------------------------------
   // 3. Loading / Not-found UI
   // -------------------------------------------------

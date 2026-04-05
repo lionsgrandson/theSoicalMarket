@@ -45,7 +45,7 @@ export default function AuthSessionSync() {
         typeof window !== "undefined" &&
         window.location.pathname.startsWith("/auth");
       if (!isAuthRoute) {
-        // FIX: this block was previously active but all console.logs have been removed
+        // Keep auth state in sync outside auth routes.
         logout();
       }
     }

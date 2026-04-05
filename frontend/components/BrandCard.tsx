@@ -86,7 +86,6 @@ useEffect(() => {
 
   fetchPlan();
 }, []);
-console.log(planName);
 
 const signedUpAs = (user as any)?.signed_up_as;
 
@@ -105,7 +104,6 @@ const isLocked = authChecked &&
 const needsUpgrade = authChecked &&
   isAuthenticated &&
   !hasValidPlan;
-console.log("needsUpgrade:",needsUpgrade,"isLocked:",isLocked,"hasAccess:",hasAccess);
 
 
   const applyBlur = !hasAccess;

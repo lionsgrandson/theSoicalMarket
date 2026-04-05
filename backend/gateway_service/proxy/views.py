@@ -3,6 +3,10 @@ from django.core.cache import cache
 import requests
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_client_ip(request):
@@ -26,12 +30,19 @@ def dynamic_proxy_handler(request, service_name, service_path):
     RATE_LIMIT = settings.RATE_LIMIT
     TIMEOUT = settings.RATE_LIMIT_TIMEOUT
 
-    request_count = cache.get(rate_limit_key, 0)
+    try:
+        request_count = cache.get(rate_limit_key, 0) or 0
+    except Exception as exc:
+        logger.warning("Rate-limit cache unavailable for %s: %s", ip, exc)
+        request_count = 0
     
     if request_count >= RATE_LIMIT:
         return JsonResponse({"error": "Too many requests"}, status=429)
 
-    cache.set(rate_limit_key, request_count + 1, timeout=TIMEOUT)
+    try:
+        cache.set(rate_limit_key, request_count + 1, timeout=TIMEOUT)
+    except Exception as exc:
+        logger.warning("Unable to write rate-limit cache for %s: %s", ip, exc)
 
     print(SERVICE_MAP)
     if service_name not in SERVICE_MAP:

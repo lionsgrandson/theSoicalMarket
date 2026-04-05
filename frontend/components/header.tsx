@@ -42,7 +42,6 @@ const Header = () => {
   const { token, user: userData, logout: storeLogout } = useAuthStore();
   const pathName = usePathname();
   const { data: session, status: sessionStatus } = useSession();
-  console.log("session data",session);
   
   const [isMounted, setIsMounted] = useState(false);
 
@@ -92,7 +91,6 @@ const Header = () => {
   };
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-console.log("Header mounted");
 
   // Desktop Auth Section
   const DesktopAuthSection = () => {

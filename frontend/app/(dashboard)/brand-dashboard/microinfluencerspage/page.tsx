@@ -121,7 +121,6 @@ function MicroInfluencersPageContent() {
   const urlPage = Number(searchParams.get("page") ?? "1");
   const currentPage = urlPage >= 1 ? urlPage : 1;
   const filter_by_self = searchParams.get("review") === "true";
-  console.log(filter_by_self);
 
   const setPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -240,7 +239,6 @@ function MicroInfluencersPageContent() {
         // CASE 1: Review Matches (filter_by_self is present)
         if (filter_by_self) {
           isSwitchingToReview.current = false;
-          console.log("Fetching Review Matches...");
 
           const filterPayload = {
             filter_by_self: true,

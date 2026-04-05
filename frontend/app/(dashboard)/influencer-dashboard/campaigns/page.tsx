@@ -236,7 +236,6 @@ const analyticsRef = useRef<HTMLDivElement | null>(null);
           }
         });
 
-        console.log("All Brand", map);
 
         setBrandMap(map);
       } catch (error) {

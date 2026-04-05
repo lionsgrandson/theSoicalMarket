@@ -18,7 +18,6 @@ export default function Footer() {
   const pathName = usePathname();
   const router = useRouter();
   const [token,setToken]=useState<string | null>(null);
-  //console.log(pathName);
   const handleSignupRoute = () => {
     setShowAuthModal(true);
   };

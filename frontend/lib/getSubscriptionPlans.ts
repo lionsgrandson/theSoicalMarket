@@ -1,4 +1,5 @@
 import type { PricingApiResponse } from "@/components/pricing-section";
+import { buildApiUrl } from "@/lib/backendUrls";
 
 const emptyPricingResponse: PricingApiResponse = {
   status: "error",
@@ -9,14 +10,8 @@ const emptyPricingResponse: PricingApiResponse = {
 };
 
 export async function getSubscriptionPlans(): Promise<PricingApiResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-  if (!baseUrl) {
-    return emptyPricingResponse;
-  }
-
   try {
-    const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-    const res = await fetch(`${normalizedBaseUrl}subscription_service/get_subscription_plans/`, {
+    const res = await fetch(buildApiUrl("subscription_service/get_subscription_plans/"), {
       next: { revalidate: 60 },
     });
 

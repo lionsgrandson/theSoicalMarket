@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
+import { buildApiUrl } from "@/lib/backendUrls";
 import {
   Select,
   SelectContent,
@@ -118,7 +119,6 @@ export default function ProposalsPage() {
   const [loading, setLoading] = useState(false);
   const params = useParams<{ id: string }>();
   const profileId = params.id;
-  console.log(profileId);
   const router = useRouter();
   const campaignRef = useRef<HTMLDivElement>(null);
   const startDateRef = useRef<HTMLDivElement>(null);
@@ -154,7 +154,6 @@ export default function ProposalsPage() {
       ...prev,
       [field]: file,
     }));
-    console.log(formData.campaignId);
   };
   const validateForm = () => {
     const newErrors = {
@@ -242,10 +241,9 @@ export default function ProposalsPage() {
         formPayload.append("attachments", formData.productPhotos);
       }
 
-      console.log("Sending proposal with FormData");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}campaign_service/hire_influencer/`,
+        buildApiUrl("campaign_service/hire_influencer/"),
         {
           method: "POST",
           headers: {
@@ -256,12 +254,9 @@ export default function ProposalsPage() {
           body: formPayload,
         }
       );
-      console.log(response);
       const data = await response.json();
-      console.log(data);
 
       if (data.code == 201) {
-        console.log("Proposal sent successfully:", data.data);
         setShowReviewModal(false);
         setShowSuccessModal(true);
       } else {
@@ -321,7 +316,6 @@ export default function ProposalsPage() {
     }));
   }, [selectedMyCampaign]);
 
-  console.log(selectedMyCampaign);
 
   return (
     <div className="flex min-h-screen ">

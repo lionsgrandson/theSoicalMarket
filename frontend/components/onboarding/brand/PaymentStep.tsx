@@ -73,7 +73,6 @@ const PaymentStep = ({ onNext, onBack }: PaymentStepProps) => {
 
   // Add a function to handle plan selection
   const handlePlanSelect = (planTitle: string) => {
-    console.log("Selected plan:", planTitle);
     // You can store the selected plan here if needed
   };
 

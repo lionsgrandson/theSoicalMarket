@@ -21,11 +21,9 @@ export const useChatStore = create<ChatStore>((set) => ({
   // ✅ set rooms & auto-calc unread
   setRooms: (rooms) =>
     set(() => {
-      console.log("🟢 setRooms called with:", rooms);
 
       const unread = rooms.filter((r) => r.seen === false).length;
 
-      console.log("🔴 Calculated unreadCount:", unread);
 
       return {
         rooms,

@@ -79,8 +79,6 @@ const isLoading =
 
       if (res.status === "success") {
         setUserData(res.data);
-        console.log(res.data);
-        
       } else {
         localStorage.removeItem("access_token");
         setToken(null);
@@ -99,7 +97,6 @@ const isLoading =
       });
       setCurrPlanName(res?.data?.plan_name)
     } catch (error) {
-      console.log("error",error);
       
     }
   };
@@ -295,9 +292,12 @@ const isSinglePlan = filteredPlans.length === 1;
         {/* Pricing Cards Grid */}
         <div className={`grid  grid-cols-1 ${gridCols}  gap-8 max-w-7xl mx-auto ${
     isSinglePlan ? "place-items-center" : ""}`}>
-          {filteredPlans.map((plan) => {
+          {filteredPlans.map((plan, index) => {
             const price = getPriceForInterval(plan.prices);
             const savings = isYearly ? calculateSavings(plan.prices) : null;
+            const isPopular =
+              filteredPlans.length >= 2 &&
+              index === Math.floor(filteredPlans.length / 2);
 
             // UI Title Mapping
             const titleMap: Record<string, string> = {
@@ -309,11 +309,20 @@ const isSinglePlan = filteredPlans.length === 1;
             return (
               <div
                 key={plan.product_id}
-                className="bg-[#f6f8fa] rounded-2xl shadow-lg border border-gray-200 overflow-hidden 
+                className={`bg-[#f6f8fa] rounded-2xl shadow-lg border overflow-hidden 
                 hover:border-primary hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)] hover:-translate-y-2 
-                transition-all duration-300 flex flex-col"
+                transition-all duration-300 flex flex-col ${
+                  isPopular ? "border-2 border-primary shadow-xl" : "border-gray-200"
+                }`}
               >
                 <div className="p-8 text-center flex flex-col flex-grow">
+                  {isPopular && (
+                    <div className="mb-3">
+                      <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white">
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
                   {/* Plan Name */}
                   <h3 className="md:text-[26px] text-[22px] font-semibold text-primary mb-8 min-h-[70px] flex items-center justify-center">
                     {titleMap[plan.name] || plan.name}

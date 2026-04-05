@@ -11,4 +11,5 @@ urlpatterns = [
 
     path('get_unread_noti/', views.get_unseen_Notification, name='unseen-noti'),
     path('noti_seen_all/', views.noti_all_read, name='noti-seen-all'),
+    path('unseen_notification_counts/', views.get_unseen_notification_counts),
 ]

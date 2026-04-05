@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import matching_views
 
 
 urlpatterns = [
@@ -26,5 +27,10 @@ urlpatterns = [
     path("get_featured_brands/", views.get_featured_brands, name="featured-brands"),
     path("feedback/", views.create_feedback),
     path("create_log/", views.create_log),
+    path('run_matching/', matching_views.run_matching, name='run_matching'),
+    path('save_influencer/<int:influencer_id>/', views.save_influencer, name='save-influencer'),
+    path('unsave_influencer/<int:influencer_id>/', views.unsave_influencer, name='unsave-influencer'),
+    path('get_saved_influencers/', views.get_saved_influencers, name='saved-influencers'),
+    path('platform_stats/', views.get_platform_stats, name='platform-stats'),
 
 ]

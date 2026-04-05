@@ -5,7 +5,6 @@ import { useAuthStore } from "@/stores/useAuthStore";
 
 export function DashboardHeader() {
   const { user, logout } = useAuthStore();
-  console.log("brand_header",user);
 const businessType=user?.brand_profile?.business_type?.split("–")[0];
 const logo = user?.brand_profile?.logo;
 

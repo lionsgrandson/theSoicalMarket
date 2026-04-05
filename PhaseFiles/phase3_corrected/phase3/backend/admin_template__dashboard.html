@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<style>
+  .tsm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .tsm-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px 24px; }
+  .tsm-card .num { font-size: 32px; font-weight: 600; color: #111827; }
+  .tsm-card .lbl { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .tsm-card .sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .tsm-section { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; }
+  .tsm-section h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: #111827; }
+  .tsm-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+  .tsm-row:last-child { border-bottom: none; }
+  .tsm-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-amber { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+</style>
+
+<h1 style="font-size:22px;font-weight:600;margin-bottom:24px;">The Social Market — Dashboard</h1>
+
+<!-- Stats grid -->
+<div class="tsm-grid">
+  <div class="tsm-card">
+    <div class="num">{{ total_users }}</div>
+    <div class="lbl">Total users</div>
+    <div class="sub">{{ total_influencers }} influencers · {{ total_brands }} brands</div>
+  </div>
+  <div class="tsm-card">
+    <div class="num">{{ total_campaigns }}</div>
+    <div class="lbl">Campaigns</div>
+    <div class="sub">{{ active_campaigns }} active</div>
+  </div>
+  <div class="tsm-card">
+    <div class="num">{{ total_proposals }}</div>
+    <div class="lbl">Proposals sent</div>
+    <div class="sub">{{ accepted_proposals }} accepted · {{ pending_proposals }} pending</div>
+  </div>
+  <div class="tsm-card">
+    <div class="num">{{ completed_campaigns }}</div>
+    <div class="lbl">Completed</div>
+    <div class="sub">{{ completion_rate }}% completion rate</div>
+  </div>
+  <div class="tsm-card">
+    <div class="num">{{ active_subscriptions }}</div>
+    <div class="lbl">Active subscriptions</div>
+    <div class="sub">{{ trialing_subscriptions }} trialing</div>
+  </div>
+</div>
+
+<!-- Proposal funnel -->
+<div class="tsm-section">
+  <h2>Proposal funnel</h2>
+  <div class="tsm-row"><span>Sent</span><span class="tsm-badge badge-blue">{{ total_proposals }}</span></div>
+  <div class="tsm-row"><span>Accepted</span><span class="tsm-badge badge-green">{{ accepted_proposals }}</span></div>
+  <div class="tsm-row"><span>Rejected</span><span class="tsm-badge badge-red">{{ rejected_proposals }}</span></div>
+  <div class="tsm-row"><span>Pending (no response)</span><span class="tsm-badge badge-amber">{{ pending_proposals }}</span></div>
+  <div class="tsm-row"><span>Completed</span><span class="tsm-badge badge-green">{{ completed_campaigns }}</span></div>
+</div>
+
+<!-- Recent activity log -->
+<div class="tsm-section">
+  <h2>Recent activity</h2>
+  {% for log in recent_logs %}
+  <div class="tsm-row">
+    <span>
+      {% if log.type_alias == "NEW_INFLUENCER" or log.type_alias == "NEW_BRAND" %}
+        <span class="tsm-badge badge-blue">{{ log.type_alias }}</span>
+      {% elif log.type_alias == "PROPOSAL_ACCEPTED" %}
+        <span class="tsm-badge badge-green">{{ log.type_alias }}</span>
+      {% elif log.type_alias == "PROPOSAL_REJECTED" %}
+        <span class="tsm-badge badge-red">{{ log.type_alias }}</span>
+      {% elif log.type_alias == "CAMPAIGN_COMPLETED" %}
+        <span class="tsm-badge badge-green">{{ log.type_alias }}</span>
+      {% else %}
+        <span class="tsm-badge badge-amber">{{ log.type_alias }}</span>
+      {% endif %}
+      &nbsp;{{ log.text|truncatechars:80 }}
+    </span>
+    <span style="color:#9ca3af;font-size:12px;">{{ log.timestamp|timesince }} ago</span>
+  </div>
+  {% empty %}
+  <div style="color:#9ca3af;font-size:13px;">No activity logged yet.</div>
+  {% endfor %}
+</div>
+{% endblock %}

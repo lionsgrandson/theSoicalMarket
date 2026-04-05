@@ -15,9 +15,7 @@ function SignupPageContent() {
   const router = useRouter();
   const params = useSearchParams();
   const returnTo = params.get("returnTo") || "";
-  const result = params.get("role")
-  console.log("current to where go",returnTo ,result);
-  
+  const result = params.get("role");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,22 +77,20 @@ const isFormValid =
       newErrors.agreeToTerms = "You must agree to the terms";
 
     setErrors(newErrors);
-    setLoading(true);
-    
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
 
-    if (formData.first_name && formData.last_name && formData.email && formData.password && formData.password === formData.confirmPassword && formData.agreeToTerms) {
-      try {
+    setLoading(true);
+
+    try {
       const res = await signup({
         ...formData,
         signup_method: "normal",
         signed_up_as: result ?? undefined,
         state: result ?? undefined,
       });
-      if (typeof window !== "undefined") {
-      localStorage.setItem("access_token", res.data.access_token);
-    }
       setAuthFromResponse(res);
-      
 
       if (res.status === "Success") {
         router.push(`/auth/verify-email?returnTo=${returnTo}`);
@@ -109,10 +105,6 @@ const isFormValid =
     } finally {
       setLoading(false);
     }
-    }
-    
-
-   
   };
 
 const handleGoogleSignUp = async () => {

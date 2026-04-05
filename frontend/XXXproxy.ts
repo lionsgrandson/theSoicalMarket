@@ -37,9 +37,6 @@ export async function proxy(request: NextRequest) {
       ? nextAuthToken.backendAccessToken
       : null);
 
-  console.log("Cookie token:", cookieToken);
-  console.log("NextAuth backend token:", nextAuthToken?.backendAccessToken);
-  console.log("Final accessToken:", accessToken);
 
   // Must be authenticated
   if (!accessToken) {
@@ -67,7 +64,6 @@ export async function proxy(request: NextRequest) {
     const isActive = subRes?.data?.status === "active";
     const isFailure = subRes?.status === "failure";
 
-    console.log(`Subscription check - Plan: ${planName}, Active: ${isActive}`);
 
     // Early fatal subscription failure
     if (isFailure) {

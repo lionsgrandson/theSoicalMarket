@@ -5,6 +5,7 @@ import { Sidebar } from "../../../components/dashboard/Sidebar";
 import { HiMenu, HiX } from "react-icons/hi";
 import { brandLinks } from "../../../config/sidebarLinks";
 import DashboardTopHeader from "../../../components/dashboard/DashboardTopHeader";
+import ErrorBoundary from "../../../components/ErrorBoundary";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { PanelRightClose } from "lucide-react";
@@ -103,7 +104,7 @@ export default function BrandDashboardLayout({ children }) {
       {/* Main content */}
       <main className="flex-1 ml-0 md:ml-64 p-6 overflow-y-auto min-h-screen">
         {path != "/brand-dashboard/messages" && <DashboardTopHeader />}
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
       </main>
     </div>
   );

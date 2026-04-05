@@ -1,9 +1,17 @@
 import type { NextConfig } from "next";
 
+const backendApiTarget = (
+  process.env.INTERNAL_API_BASE_URL?.trim() || "https://backend.thesocialmarket.ai/api/"
+).replace(/\/+$/, "");
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  skipTrailingSlashRedirect: true,
+  turbopack: {
+    root: process.cwd(),
+  },
   compiler:{
     removeConsole:true
     
@@ -59,6 +67,14 @@ const nextConfig: NextConfig = {
         hostname: "i.ibb.co",
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/backend-api/:path*",
+        destination: `${backendApiTarget}/:path*/`,
+      },
+    ];
   },
   
 };

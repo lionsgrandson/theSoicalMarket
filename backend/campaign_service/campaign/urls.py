@@ -14,9 +14,12 @@ urlpatterns = [
 
     path('accept_offer/<int:offer_id>/', views.accept_offer, name='accept_offer'),
     path('reject_offer/<int:offer_id>/', views.reject_offer, name='reject_offer'),
+    path('pending_hires/', views.get_pending_hires, name='pending_hires'),
 
     path('complete_offer/<int:offer_id>/', views.complete_offer, name='complete_offer'),
     path('give_rating/<int:offer_id>/', views.give_rating, name='give_rating'),
+    path('give_brand_rating/<int:offer_id>/', views.give_brand_rating),
+    path('campaign_performance/<int:campaign_id>/', views.get_campaign_performance),
 
     path('<int:brand_id>/get_frequent_platform/', views.frequent_platform),
     path('<int:user_id>/<int:brand_id>/hires_and_campaigns/', views.get_hires_and_campaigns),

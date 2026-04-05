@@ -256,8 +256,7 @@ export default function CreateCampaignModal({
 
     try {
       const res = await uploadToCloudinary(file);
-      // Assuming uploadToCloudinary returns { url: string }
-      if (res?.url) {
+      if (res?.success && res.url) {
         setFormData((prev) => ({
           ...prev,
           campaign_poster: res.url ?? null,
@@ -266,7 +265,7 @@ export default function CreateCampaignModal({
         }));
         // toast.success("Image uploaded successfully");
       } else {
-        setUploadError("Upload failed - no URL returned");
+        setUploadError(res.error || "Upload failed - no URL returned");
       }
     } catch (err) {
       console.error("Upload failed", err);
@@ -302,7 +301,7 @@ export default function CreateCampaignModal({
 
       try {
         const res = await uploadToCloudinary(file);
-        if (res?.url) {
+        if (res?.success && res.url) {
           setFormData((prev) => ({
             ...prev,
             campaign_poster: res.url ?? null,
@@ -311,7 +310,7 @@ export default function CreateCampaignModal({
           }));
           toast.success("Image uploaded successfully");
         } else {
-          setUploadError("Upload failed - no URL returned");
+          setUploadError(res.error || "Upload failed - no URL returned");
         }
       } catch (err) {
         console.error("Upload failed", err);
@@ -382,7 +381,6 @@ const getMissingFields = () => {
         toast("Saved campaign  successfully");
         onSuccess(res.data);
         onClose();
-        console.log(res);
       } else if (res?.status === "failure" && res?.error) {
         // Loop through the error object (e.g., target_audience, budget_range, etc.)
         Object.keys(res.error).forEach((field) => {
@@ -396,7 +394,6 @@ const getMissingFields = () => {
 
               // Show the toast
               toast(`${readableField}: ${msg}`);
-              console.log(`${readableField}: ${msg}`);
             });
           }
         });
@@ -406,10 +403,8 @@ const getMissingFields = () => {
       }
     } catch (error) {
       toast("There is an error!");
-      console.log(error);
     }
 
-    console.log("Creating campaign:", formData);
   };
 
   const handleCreateCampaign = async () => {
@@ -449,14 +444,11 @@ const getMissingFields = () => {
         if (formData.auto_match_micro_influencers) {
   router.push("/brand-dashboard/microinfluencerspage?review=true");
 }
-        console.log(res);
       }
     } catch (error) {
       toast("There is an error!");
-      console.log(error);
     }
 
-    console.log("Creating campaign:", formData);
   };
 
   if (!isOpen) return null;

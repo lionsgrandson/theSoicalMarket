@@ -5,6 +5,7 @@ import { CheckCircle, Search, MessageCircle, Gift, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/apiClient";
+import { buildApiUrl } from "@/lib/backendUrls";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useInfluencerOnboarding } from "@/contexts/InfluencerOnboardingContext";
 import { toast } from "react-toastify";
@@ -69,7 +70,6 @@ blog_follower:number;
 }
 
 const transformInfluencerDataForAPI = (data: InfluencerOnboardingData) => {
-  console.log("profile_picture:", data.profile_picture);
 
   const payload = {
     is_influencer_profile_complete:true,
@@ -174,7 +174,6 @@ const CompletionStep = ({ onComplete }: CompletionStepProps) => {
 
 //       try {
 //         const onboardingData = JSON.parse(storedData) as InfluencerOnboardingData;
-//         console.log("profile_picture:", onboardingData.profile_picture);
 
 //         const apiPayload = transformInfluencerDataForAPI(onboardingData);
 
@@ -224,7 +223,7 @@ useEffect(() => {
       const apiPayload = transformInfluencerDataForAPI(onboardingData);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}user_service/update_user_profile/`,
+        buildApiUrl("user_service/update_user_profile/"),
         {
           method: "PATCH",
           headers: {

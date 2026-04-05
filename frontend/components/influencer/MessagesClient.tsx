@@ -126,6 +126,22 @@ const getSafeImageSrc = (src?: string) => {
   return "/images/person.jpg";
 };
 
+const buildChatSocketUrl = (roomId: string, token: string) => {
+  const rawBase =
+    process.env.NEXT_PUBLIC_WS_URL ?? process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+
+  if (!rawBase) {
+    throw new Error("Missing NEXT_PUBLIC_WS_URL");
+  }
+
+  const trimmedBase = rawBase.replace(/\/+$/, "");
+  const handshakeBase = trimmedBase.endsWith("/chat_handshake")
+    ? trimmedBase
+    : `${trimmedBase}/chat_handshake`;
+
+  return `${handshakeBase}/ws/chat/${roomId}/?token=${encodeURIComponent(token)}`;
+};
+
 
 function InfluencerMessagesClientContent() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -159,12 +175,10 @@ function InfluencerMessagesClientContent() {
   useEffect(() => {
     const createRoom = async () => {
       if (!otherUserId) {
-        console.log("No otherUserId in URL");
         return;
       }
 
       try {
-        console.log("📝 Creating room for user:", otherUserId);
 
         const token = localStorage.getItem("access_token");
         if (!token) {
@@ -182,11 +196,9 @@ function InfluencerMessagesClientContent() {
           }),
         });
 
-        console.log("✅ Room creation response:", res);
 
         if (res?.data?.room_id) {
           const roomId = res.data.room_id;
-          console.log("🔑 Room ID:", roomId);
 
           // Create full Room object
           const newRoom: Room = {
@@ -198,7 +210,6 @@ function InfluencerMessagesClientContent() {
             other_user_avatar: res.data.other_user_avatar,
           };
 
-          console.log("🎯 Setting selected room:", newRoom);
           setSelectedRoom(newRoom);
         } else {
           console.error("No room_id in response:", res);
@@ -224,7 +235,6 @@ function InfluencerMessagesClientContent() {
         );
         setOtherUserProfile(response?.data);
       } catch (error) {
-        console.log("error", error);
       }
     };
     fetchOtherUserProfile();
@@ -251,7 +261,6 @@ function InfluencerMessagesClientContent() {
 
         if (response?.data) {
           setRooms(response.data);
-          console.log(response.data);
         }
       } catch (err) {
         console.error("Failed to fetch rooms:", err);
@@ -391,7 +400,6 @@ function InfluencerMessagesClientContent() {
             return rest;
           });
 
-          console.log("Sorted Messages:", cleanedMessages);
           setMessages(cleanedMessages);
         }
       } catch (err) {
@@ -422,12 +430,6 @@ function InfluencerMessagesClientContent() {
   // Initialize WebSocket
   useEffect(() => {
     if (!selectedRoom || !currentUserId) {
-      console.log(
-        "⏳ Waiting for room or currentUserId. Room:",
-        selectedRoom,
-        "UserId:",
-        currentUserId
-      );
       return;
     }
 
@@ -443,24 +445,15 @@ function InfluencerMessagesClientContent() {
           return;
         }
 
-        console.log(
-          "✨ Initiating WebSocket connection for room:",
-          selectedRoom.room_id
-        );
 
         // Close any existing connection
         if (wsRef.current) {
-          console.log("Closing existing WebSocket");
           wsRef.current.close();
           wsRef.current = null;
         }
 
-        // Build WebSocket URL using existing room
-        const wsUrl = `wss://exhaust-minute-picked-reservations.trycloudflare.com/chat_handshake/ws/chat/${
-          selectedRoom.room_id
-        }/?token=${encodeURIComponent(token)}`;
+        const wsUrl = buildChatSocketUrl(selectedRoom.room_id, token);
 
-        console.log("🔗 Connecting to WebSocket:", wsUrl);
 
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
@@ -468,7 +461,6 @@ function InfluencerMessagesClientContent() {
         const userId = currentUserId;
 
         ws.onopen = () => {
-          console.log("✅ WebSocket connected to room:", selectedRoom.room_id);
           if (isMounted) {
             // Trigger a re-render to enable send button
             setMessages((prev) => prev);
@@ -481,11 +473,6 @@ function InfluencerMessagesClientContent() {
           try {
             const payload = JSON.parse(event.data);
 
-            console.log("Message received:", {
-              sender_id: payload.sender_id,
-              current_user: userId,
-              is_own: Number(payload.sender_id) !== Number(userId),
-            });
 
             let incomingMessage = payload.message ?? "";
             let fileUrl = payload.file ?? undefined;
@@ -540,7 +527,6 @@ function InfluencerMessagesClientContent() {
         };
 
         ws.onclose = () => {
-          console.log("⚠️ WebSocket disconnected");
         };
       } catch (err) {
         console.error("Failed to initiate chat:", err);

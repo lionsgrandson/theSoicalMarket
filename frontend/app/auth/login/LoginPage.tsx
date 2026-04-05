@@ -6,7 +6,6 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuthStore } from '@/stores/useAuthStore'
 import { signIn } from 'next-auth/react'
 
 function LoginPageContent() {
@@ -39,22 +38,25 @@ function LoginPageContent() {
     setLoading(true)
 
     try {
+      const callbackUrl = returnTo || '/home_dashboard'
       const result = await signIn('credentials', {
+        redirect: false,
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        callbackUrl,
       })
 
       if (result?.error) {
-        setErrors({ general: result.error })
-        throw new Error(result.error)
+        setErrors({
+          general:
+            result.error === 'CredentialsSignin'
+              ? 'Invalid email or password'
+              : result.error,
+        })
+        return
       }
 
-      if (returnTo) {
-        router.push(returnTo)
-      } else {
-        router.push('/home_dashboard')
-      }
+      router.push(result?.url || callbackUrl)
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Login failed'
       setErrors({ general: message })
@@ -64,12 +66,12 @@ function LoginPageContent() {
   }
 
   const handleGoogleLogin = async () => {
-    signIn('google', {
+    await signIn('google', {
       callbackUrl: `/home_dashboard`,
     })
   }
   const handleAppleLogin = async () => {
-    signIn('apple', {
+    await signIn('apple', {
       callbackUrl: `/home_dashboard`,
     })
   }

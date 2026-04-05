@@ -84,7 +84,7 @@ Save the output.
   PATCH__login_and_dashboard.py
     → READ this file, then:
        a) In app/auth/login/LoginPage.tsx: delete the import line shown as FIND_A
-       b) In app/home_dashboard/page.tsx: delete all 5 console.log lines listed
+       b) In app/home_dashboard/page.tsx: delete all 5 debug log lines listed
 
 
 ## NO MIGRATIONS NEEDED for Phase 1+2.

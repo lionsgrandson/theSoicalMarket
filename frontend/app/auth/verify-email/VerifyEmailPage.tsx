@@ -33,7 +33,6 @@ function VerifyEmailPageContent() {
 
         const email = res.data.user.email;
         setUserEmail(email);
-        console.log("Email:", email);
 
         // Send OTP only once
         await apiClient("user_service/send_otp/", {
@@ -42,10 +41,7 @@ function VerifyEmailPageContent() {
         });
 
         setOtpSent(true);
-        console.log("✅ OTP sent to email:", email);
-        console.log("✅ User full Info:", res.data);
       } catch (error) {
-        console.error("❌ API Error:", error);
         setError("Failed to send verification code. Please try again.");
       }
     };
@@ -79,6 +75,7 @@ function VerifyEmailPageContent() {
 
     if (verificationCode.length !== 4) {
       setError("Please enter the complete verification code");
+      setLoading(false);
       return;
     }
 
@@ -87,8 +84,6 @@ function VerifyEmailPageContent() {
         method: "POST",
         body: JSON.stringify({ email: userEmail, otp: verificationCode }),
       });
-
-      console.log("Verification response:", res);
 
       if (res.code == 200) {
         localStorage.setItem("emailVerified", "true");
@@ -108,8 +103,8 @@ function VerifyEmailPageContent() {
         setError("Invalid verification code. Please try again.");
       }
     } catch (error) {
-      console.error("❌ Verification Error:", error);
       setError("Verification failed. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
@@ -122,7 +117,6 @@ function VerifyEmailPageContent() {
         body: JSON.stringify({ email: userEmail }),
       });
 
-      console.log("✅ Verification code resent to:", userEmail);
       setError(""); // Clear any previous errors
       toast("Verification code resent to your email!");
     } catch (error) {
@@ -186,8 +180,8 @@ function VerifyEmailPageContent() {
                 <p className="text-red-400 text-center text-sm">{error}</p>
               )}
 
-              <button
-                  onClick={handleSubmit}
+                <button
+                  type="submit"
                   disabled={loading || isVerified}
                   className="w-full bg-secondary cursor-pointer text-slate-900 font-semibold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >

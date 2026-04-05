@@ -1,5 +1,6 @@
 // stores/useAuthStore.ts
 import { apiClient } from "@/lib/apiClient";
+import Cookies from "js-cookie";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -52,8 +53,6 @@ export const useAuthStore = create<AuthState>()(
     },
 
     setToken: (token) => {
-      // FIX: removed Cookies.set() — NextAuth owns the auth cookie now
-      // Keeping only localStorage so apiClient can read it
       if (token) {
         localStorage.setItem("access_token", token);
       } else {
@@ -63,7 +62,6 @@ export const useAuthStore = create<AuthState>()(
     },
 
     setRefreshToken: (refreshToken) => {
-      // FIX: removed Cookies.set() — NextAuth owns the cookie
       if (refreshToken) {
         localStorage.setItem("refresh_token", refreshToken);
       } else {
@@ -85,6 +83,7 @@ export const useAuthStore = create<AuthState>()(
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
+      Cookies.remove("user_info", { path: "/" });
       set({ token: null, refreshToken: null, user: null });
     },
 

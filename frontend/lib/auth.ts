@@ -67,21 +67,14 @@ export function setAuthFromResponse(res: SignupResponse) {
   const store = useAuthStore.getState();
 
   if (res?.data?.access_token) {
-    console.log("🔐 Setting access token:", res.data.access_token.substring(0, 20) + "...");
     store.setToken(res.data.access_token);
   }
 
   if (res?.data?.refresh_token) {
-    console.log("🔄 Setting refresh token:", res.data.refresh_token.substring(0, 20) + "...");
     store.setRefreshToken(res.data.refresh_token);
   }
 
   if (res?.data?.user) {
-    console.log("👤 Setting user:", res.data.user);
     store.setUser(res.data.user);
   }
-
-  // Verify token was saved
-  const savedToken = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-  console.log("✅ Token saved in localStorage:", savedToken ? "YES" : "NO");
 }

@@ -6,6 +6,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # FIX: was hardcoded 'django-insecure-...' — must come from .env
 SECRET_KEY = config('SECRET_KEY')
+PAYMENT_FIELD_ENCRYPTION_KEY = config(
+    'PAYMENT_FIELD_ENCRYPTION_KEY',
+    default=config('DJANGO_CRYPTOGRAPHY_KEY', default=''),
+)
 
 # FIX: was hardcoded True — reads from .env so production stays safe
 DEBUG = config('DEBUG', default=False, cast=bool)
